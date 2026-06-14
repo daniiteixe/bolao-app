@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bolão Copa 2026 — Família Corredor</title>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+
+const { useState, useEffect, useMemo } = React;
+
+const ADMIN_PIN = "3264";
+
+const JSONBIN_BIN_ID = "6a2f0aebf5f4af5e29f1908f";
+const JSONBIN_ACCESS_KEY = "$2a$10$GKJZUDoZE/Io6Y/5cRDcs.CWQ3qxx4bNPND8YmgH7cyp49PNDJXvi";
+const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
+function withTimeout(promise, ms, label) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`timeout:${label}`)), ms);
+    promise
+      .then((v) => {
+        clearTimeout(timer);
+        resolve(v);
+      })
+      .catch((e) => {
+        clearTimeout(timer);
+        reject(e);
+      });
+  });
+}
+const POINTS_EXACT = 5;
+const POINTS_OUTCOME = 3;
+
+const DEFAULT_DATA = {"participants": ["Brunna", "Leonardo", "Fúlvia", "Vinicius", "Tina", "Amaral", "Bruna", "Eduardo", "Caio", "Daniel", "Thiago", "Rafael", "Dani"], "matches": [{"id": "m1", "teamA": "México", "teamB": "África do Sul", "fase": "Grupo A", "data": "11/06"}, {"id": "m2", "teamA": "Coreia do Sul", "teamB": "República Tcheca", "fase": "Grupo A", "data": "11/06"}, {"id": "m3", "teamA": "República Tcheca", "teamB": "África do Sul", "fase": "Grupo A", "data": "18/06"}, {"id": "m4", "teamA": "México", "teamB": "Coreia do Sul", "fase": "Grupo A", "data": "18/06"}, {"id": "m5", "teamA": "África do Sul", "teamB": "Coreia do Sul", "fase": "Grupo A", "data": "24/06"}, {"id": "m6", "teamA": "México", "teamB": "República Tcheca", "fase": "Grupo A", "data": "24/06"}, {"id": "m7", "teamA": "Canadá", "teamB": "Bósnia", "fase": "Grupo B", "data": "12/06"}, {"id": "m8", "teamA": "Qatar", "teamB": "Suíça", "fase": "Grupo B", "data": "13/06"}, {"id": "m9", "teamA": "Suíça", "teamB": "Bósnia", "fase": "Grupo B", "data": "18/06"}, {"id": "m10", "teamA": "Canadá", "teamB": "Qatar", "fase": "Grupo B", "data": "18/06"}, {"id": "m11", "teamA": "Suíça", "teamB": "Canadá", "fase": "Grupo B", "data": "24/06"}, {"id": "m12", "teamA": "Bósnia", "teamB": "Qatar", "fase": "Grupo B", "data": "24/06"}, {"id": "m13", "teamA": "Brasil", "teamB": "Marrocos", "fase": "Grupo C", "data": "13/06"}, {"id": "m14", "teamA": "Haiti", "teamB": "Escócia", "fase": "Grupo C", "data": "13/06"}, {"id": "m15", "teamA": "Brasil", "teamB": "Haiti", "fase": "Grupo C", "data": "19/06"}, {"id": "m16", "teamA": "Escócia", "teamB": "Marrocos", "fase": "Grupo C", "data": "19/06"}, {"id": "m17", "teamA": "Escócia", "teamB": "Brasil", "fase": "Grupo C", "data": "24/06"}, {"id": "m18", "teamA": "Marrocos", "teamB": "Haiti", "fase": "Grupo C", "data": "24/06"}, {"id": "m19", "teamA": "Estados Unidos", "teamB": "Paraguai", "fase": "Grupo D", "data": "12/06"}, {"id": "m20", "teamA": "Austrália", "teamB": "Turquia", "fase": "Grupo D", "data": "14/06"}, {"id": "m21", "teamA": "Turquia", "teamB": "Paraguai", "fase": "Grupo D", "data": "19/06"}, {"id": "m22", "teamA": "Estados Unidos", "teamB": "Austrália", "fase": "Grupo D", "data": "19/06"}, {"id": "m23", "teamA": "Estados Unidos", "teamB": "Turquia", "fase": "Grupo D", "data": "24/06"}, {"id": "m24", "teamA": "Paraguai", "teamB": "Austrália", "fase": "Grupo D", "data": "24/06"}, {"id": "m25", "teamA": "Alemanha", "teamB": "Curaçao", "fase": "Grupo E", "data": "14/06"}, {"id": "m26", "teamA": "Costa do Marfim", "teamB": "Equador", "fase": "Grupo E", "data": "14/06"}, {"id": "m27", "teamA": "Alemanha", "teamB": "Costa do Marfim", "fase": "Grupo E", "data": "20/06"}, {"id": "m28", "teamA": "Equador", "teamB": "Curaçao", "fase": "Grupo E", "data": "20/06"}, {"id": "m29", "teamA": "Alemanha", "teamB": "Equador", "fase": "Grupo E", "data": "25/06"}, {"id": "m30", "teamA": "Costa do Marfim", "teamB": "Curaçao", "fase": "Grupo E", "data": "25/06"}, {"id": "m31", "teamA": "Holanda", "teamB": "Japão", "fase": "Grupo F", "data": "14/06"}, {"id": "m32", "teamA": "Suécia", "teamB": "Tunísia", "fase": "Grupo F", "data": "14/06"}, {"id": "m33", "teamA": "Holanda", "teamB": "Suécia", "fase": "Grupo F", "data": "20/06"}, {"id": "m34", "teamA": "Japão", "teamB": "Tunísia", "fase": "Grupo F", "data": "20/06"}, {"id": "m35", "teamA": "Holanda", "teamB": "Tunísia", "fase": "Grupo F", "data": "25/06"}, {"id": "m36", "teamA": "Japão", "teamB": "Suécia", "fase": "Grupo F", "data": "25/06"}, {"id": "m37", "teamA": "Bélgica", "teamB": "Irã", "fase": "Grupo G", "data": "15/06"}, {"id": "m38", "teamA": "Nova Zelândia", "teamB": "Egito", "fase": "Grupo G", "data": "15/06"}, {"id": "m39", "teamA": "Bélgica", "teamB": "Nova Zelândia", "fase": "Grupo G", "data": "21/06"}, {"id": "m40", "teamA": "Irã", "teamB": "Egito", "fase": "Grupo G", "data": "21/06"}, {"id": "m41", "teamA": "Bélgica", "teamB": "Egito", "fase": "Grupo G", "data": "26/06"}, {"id": "m42", "teamA": "Irã", "teamB": "Nova Zelândia", "fase": "Grupo G", "data": "26/06"}, {"id": "m43", "teamA": "Espanha", "teamB": "Cabo Verde", "fase": "Grupo H", "data": "15/06"}, {"id": "m44", "teamA": "Uruguai", "teamB": "Arábia Saudita", "fase": "Grupo H", "data": "15/06"}, {"id": "m45", "teamA": "Espanha", "teamB": "Uruguai", "fase": "Grupo H", "data": "21/06"}, {"id": "m46", "teamA": "Cabo Verde", "teamB": "Arábia Saudita", "fase": "Grupo H", "data": "21/06"}, {"id": "m47", "teamA": "Espanha", "teamB": "Arábia Saudita", "fase": "Grupo H", "data": "26/06"}, {"id": "m48", "teamA": "Uruguai", "teamB": "Cabo Verde", "fase": "Grupo H", "data": "26/06"}, {"id": "m49", "teamA": "França", "teamB": "Iraque", "fase": "Grupo I", "data": "16/06"}, {"id": "m50", "teamA": "Noruega", "teamB": "Senegal", "fase": "Grupo I", "data": "16/06"}, {"id": "m51", "teamA": "França", "teamB": "Noruega", "fase": "Grupo I", "data": "22/06"}, {"id": "m52", "teamA": "Iraque", "teamB": "Senegal", "fase": "Grupo I", "data": "22/06"}, {"id": "m53", "teamA": "França", "teamB": "Senegal", "fase": "Grupo I", "data": "27/06"}, {"id": "m54", "teamA": "Noruega", "teamB": "Iraque", "fase": "Grupo I", "data": "27/06"}, {"id": "m55", "teamA": "Argentina", "teamB": "Argélia", "fase": "Grupo J", "data": "16/06"}, {"id": "m56", "teamA": "Áustria", "teamB": "Jordânia", "fase": "Grupo J", "data": "16/06"}, {"id": "m57", "teamA": "Argentina", "teamB": "Áustria", "fase": "Grupo J", "data": "22/06"}, {"id": "m58", "teamA": "Argélia", "teamB": "Jordânia", "fase": "Grupo J", "data": "22/06"}, {"id": "m59", "teamA": "Argentina", "teamB": "Jordânia", "fase": "Grupo J", "data": "27/06"}, {"id": "m60", "teamA": "Áustria", "teamB": "Argélia", "fase": "Grupo J", "data": "27/06"}, {"id": "m61", "teamA": "Portugal", "teamB": "RD Congo", "fase": "Grupo K", "data": "17/06"}, {"id": "m62", "teamA": "Uzbequistão", "teamB": "Colômbia", "fase": "Grupo K", "data": "17/06"}, {"id": "m63", "teamA": "Portugal", "teamB": "Uzbequistão", "fase": "Grupo K", "data": "23/06"}, {"id": "m64", "teamA": "Colômbia", "teamB": "RD Congo", "fase": "Grupo K", "data": "23/06"}, {"id": "m65", "teamA": "Portugal", "teamB": "Colômbia", "fase": "Grupo K", "data": "27/06"}, {"id": "m66", "teamA": "Uzbequistão", "teamB": "RD Congo", "fase": "Grupo K", "data": "27/06"}, {"id": "m67", "teamA": "Inglaterra", "teamB": "Croácia", "fase": "Grupo L", "data": "17/06"}, {"id": "m68", "teamA": "Gana", "teamB": "Panamá", "fase": "Grupo L", "data": "17/06"}, {"id": "m69", "teamA": "Inglaterra", "teamB": "Gana", "fase": "Grupo L", "data": "23/06"}, {"id": "m70", "teamA": "Panamá", "teamB": "Croácia", "fase": "Grupo L", "data": "23/06"}, {"id": "m71", "teamA": "Inglaterra", "teamB": "Panamá", "fase": "Grupo L", "data": "27/06"}, {"id": "m72", "teamA": "Croácia", "teamB": "Gana", "fase": "Grupo L", "data": "27/06"}], "predictions": {"m1": {"Brunna": {"a": 2, "b": 0}, "Leonardo": {"a": 2, "b": 0}, "Fúlvia": {"a": 3, "b": 0}, "Vinicius": {"a": 3, "b": 0}, "Tina": {"a": 3, "b": 1}, "Amaral": {"a": 2, "b": 0}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 1, "b": 0}, "Caio": {"a": 1, "b": 0}, "Daniel": {"a": 1, "b": 3}, "Thiago": {"a": 2, "b": 0}, "Rafael": {"a": 3, "b": 2}, "Dani": {"a": 2, "b": 0}}, "m2": {"Brunna": {"a": 2, "b": 1}, "Leonardo": {"a": 0, "b": 1}, "Fúlvia": {"a": 1, "b": 2}, "Vinicius": {"a": 0, "b": 2}, "Tina": {"a": 0, "b": 3}, "Amaral": {"a": 0, "b": 0}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 0, "b": 0}, "Caio": {"a": 2, "b": 2}, "Daniel": {"a": 0, "b": 0}, "Thiago": {"a": 1, "b": 2}, "Rafael": {"a": 1, "b": 1}, "Dani": {"a": 1, "b": 1}}, "m3": {"Brunna": {"a": 1, "b": 1}, "Leonardo": {"a": 1, "b": 1}, "Fúlvia": {"a": 1, "b": 1}, "Vinicius": {"a": 3, "b": 0}, "Tina": {"a": 2, "b": 1}, "Amaral": {"a": 1, "b": 0}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 0, "b": 1}, "Caio": {"a": 1, "b": 2}, "Daniel": {"a": 1, "b": 2}, "Thiago": {"a": 0, "b": 2}, "Rafael": {"a": 2, "b": 0}, "Dani": {"a": 1, "b": 1}}, "m4": {"Brunna": {"a": 2, "b": 2}, "Leonardo": {"a": 2, "b": 1}, "Fúlvia": {"a": 2, "b": 1}, "Vinicius": {"a": 3, "b": 0}, "Tina": {"a": 3, "b": 3}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 2, "b": 1}, "Caio": {"a": 2, "b": 1}, "Daniel": {"a": 3, "b": 0}, "Thiago": {"a": 2, "b": 2}, "Rafael": {"a": 2, "b": 1}, "Dani": {"a": 2, "b": 1}}, "m5": {"Brunna": {"a": 2, "b": 2}, "Leonardo": {"a": 1, "b": 1}, "Fúlvia": {"a": 0, "b": 3}, "Vinicius": {"a": 1, "b": 0}, "Tina": {"a": 2, "b": 0}, "Amaral": {"a": 1, "b": 1}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 1, "b": 1}, "Caio": {"a": 2, "b": 1}, "Daniel": {"a": 2, "b": 0}, "Thiago": {"a": 3, "b": 2}, "Rafael": {"a": 1, "b": 2}, "Dani": {"a": 1, "b": 2}}, "m6": {"Brunna": {"a": 2, "b": 1}, "Leonardo": {"a": 2, "b": 1}, "Fúlvia": {"a": 1, "b": 0}, "Vinicius": {"a": 2, "b": 0}, "Tina": {"a": 4, "b": 3}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 1, "b": 0}, "Eduardo": {"a": 1, "b": 0}, "Caio": {"a": 1, "b": 1}, "Daniel": {"a": 2, "b": 3}, "Thiago": {"a": 2, "b": 1}, "Rafael": {"a": 2, "b": 1}, "Dani": {"a": 2, "b": 1}}, "m7": {"Brunna": {"a": 3, "b": 1}, "Leonardo": {"a": 2, "b": 0}, "Fúlvia": {"a": 4, "b": 1}, "Vinicius": {"a": 1, "b": 2}, "Tina": {"a": 2, "b": 1}, "Amaral": {"a": 1, "b": 0}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 1, "b": 0}, "Caio": {"a": 2, "b": 2}, "Daniel": {"a": 2, "b": 1}, "Thiago": {"a": 1, "b": 0}, "Rafael": {"a": 2, "b": 0}, "Dani": {"a": 2, "b": 1}}, "m8": {"Brunna": {"a": 0, "b": 2}, "Leonardo": {"a": 0, "b": 1}, "Fúlvia": {"a": 0, "b": 2}, "Vinicius": {"a": 0, "b": 3}, "Tina": {"a": 2, "b": 2}, "Amaral": {"a": 1, "b": 1}, "Bruna": {"a": 0, "b": 2}, "Eduardo": {"a": 1, "b": 2}, "Caio": {"a": 1, "b": 2}, "Daniel": {"a": 3, "b": 1}, "Thiago": {"a": 0, "b": 3}, "Rafael": {"a": 1, "b": 4}, "Dani": {"a": 1, "b": 2}}, "m9": {"Brunna": {"a": 2, "b": 0}, "Leonardo": {"a": 1, "b": 0}, "Fúlvia": {"a": 3, "b": 0}, "Vinicius": {"a": 3, "b": 1}, "Tina": {"a": 3, "b": 2}, "Amaral": {"a": 1, "b": 1}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 2, "b": 2}, "Caio": {"a": 2, "b": 0}, "Daniel": {"a": 2, "b": 2}, "Thiago": {"a": 4, "b": 0}, "Rafael": {"a": 2, "b": 1}, "Dani": {"a": 2, "b": 1}}, "m10": {"Brunna": {"a": 1, "b": 0}, "Leonardo": {"a": 1, "b": 1}, "Fúlvia": {"a": 4, "b": 1}, "Vinicius": {"a": 1, "b": 0}, "Tina": {"a": 3, "b": 2}, "Amaral": {"a": 1, "b": 1}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 1, "b": 0}, "Caio": {"a": 2, "b": 0}, "Daniel": {"a": 2, "b": 3}, "Thiago": {"a": 2, "b": 1}, "Rafael": {"a": 2, "b": 1}, "Dani": {"a": 2, "b": 0}}, "m11": {"Brunna": {"a": 1, "b": 1}, "Leonardo": {"a": 1, "b": 1}, "Fúlvia": {"a": 0, "b": 0}, "Vinicius": {"a": 2, "b": 0}, "Tina": {"a": 3, "b": 2}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 2, "b": 0}, "Caio": {"a": 2, "b": 2}, "Daniel": {"a": 3, "b": 1}, "Thiago": {"a": 1, "b": 1}, "Rafael": {"a": 1, "b": 1}, "Dani": {"a": 1, "b": 1}}, "m12": {"Brunna": {"a": 0, "b": 1}, "Leonardo": {"a": 1, "b": 2}, "Fúlvia": {"a": 1, "b": 1}, "Vinicius": {"a": 3, "b": 0}, "Tina": {"a": 2, "b": 0}, "Amaral": {"a": 0, "b": 1}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 3, "b": 2}, "Caio": {"a": 0, "b": 0}, "Daniel": {"a": 0, "b": 0}, "Thiago": {"a": 2, "b": 1}, "Rafael": {"a": 2, "b": 1}, "Dani": {"a": 2, "b": 1}}, "m13": {"Brunna": {"a": 2, "b": 0}, "Leonardo": {"a": 1, "b": 0}, "Fúlvia": {"a": 2, "b": 1}, "Vinicius": {"a": 2, "b": 0}, "Tina": {"a": 3, "b": 1}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 3, "b": 0}, "Eduardo": {"a": 3, "b": 0}, "Caio": {"a": 2, "b": 1}, "Daniel": {"a": 1, "b": 2}, "Thiago": {"a": 2, "b": 0}, "Rafael": {"a": 2, "b": 1}, "Dani": {"a": 3, "b": 1}}, "m14": {"Brunna": {"a": 3, "b": 0}, "Leonardo": {"a": 0, "b": 2}, "Fúlvia": {"a": 1, "b": 2}, "Vinicius": {"a": 1, "b": 4}, "Tina": {"a": 2, "b": 0}, "Amaral": {"a": 1, "b": 1}, "Bruna": {"a": 0, "b": 2}, "Eduardo": {"a": 0, "b": 2}, "Caio": {"a": 1, "b": 1}, "Daniel": {"a": 0, "b": 2}, "Thiago": {"a": 1, "b": 3}, "Rafael": {"a": 0, "b": 3}, "Dani": {"a": 0, "b": 2}}, "m15": {"Brunna": {"a": 3, "b": 0}, "Leonardo": {"a": 4, "b": 0}, "Fúlvia": {"a": 3, "b": 0}, "Vinicius": {"a": 8, "b": 0}, "Tina": {"a": 3, "b": 2}, "Amaral": {"a": 3, "b": 0}, "Bruna": {"a": 4, "b": 0}, "Eduardo": {"a": 3, "b": 0}, "Caio": {"a": 2, "b": 0}, "Daniel": {"a": 2, "b": 0}, "Thiago": {"a": 4, "b": 0}, "Rafael": {"a": 4, "b": 0}, "Dani": {"a": 4, "b": 0}}, "m16": {"Brunna": {"a": 0, "b": 2}, "Leonardo": {"a": 0, "b": 2}, "Fúlvia": {"a": 1, "b": 1}, "Vinicius": {"a": 0, "b": 2}, "Tina": {"a": 2, "b": 0}, "Amaral": {"a": 1, "b": 2}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 2, "b": 2}, "Caio": {"a": 2, "b": 3}, "Daniel": {"a": 1, "b": 3}, "Thiago": {"a": 2, "b": 2}, "Rafael": {"a": 1, "b": 2}, "Dani": {"a": 1, "b": 1}}, "m17": {"Brunna": {"a": 0, "b": 4}, "Leonardo": {"a": 0, "b": 2}, "Fúlvia": {"a": 0, "b": 2}, "Vinicius": {"a": 0, "b": 4}, "Tina": {"a": 0, "b": 2}, "Amaral": {"a": 0, "b": 2}, "Bruna": {"a": 1, "b": 2}, "Eduardo": {"a": 0, "b": 1}, "Caio": {"a": 0, "b": 2}, "Daniel": {"a": 1, "b": 1}, "Thiago": {"a": 0, "b": 1}, "Rafael": {"a": 1, "b": 2}, "Dani": {"a": 1, "b": 2}}, "m18": {"Brunna": {"a": 3, "b": 0}, "Leonardo": {"a": 3, "b": 0}, "Fúlvia": {"a": 2, "b": 0}, "Vinicius": {"a": 6, "b": 0}, "Tina": {"a": 2, "b": 1}, "Amaral": {"a": 3, "b": 0}, "Bruna": {"a": 3, "b": 0}, "Eduardo": {"a": 3, "b": 0}, "Caio": {"a": 2, "b": 0}, "Daniel": {"a": 3, "b": 0}, "Thiago": {"a": 3, "b": 0}, "Rafael": {"a": 3, "b": 0}, "Dani": {"a": 3, "b": 0}}, "m19": {"Brunna": {"a": 2, "b": 1}, "Leonardo": {"a": 2, "b": 2}, "Fúlvia": {"a": 1, "b": 1}, "Vinicius": {"a": 1, "b": 1}, "Tina": {"a": 3, "b": 3}, "Amaral": {"a": 1, "b": 1}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 0, "b": 0}, "Caio": {"a": 2, "b": 1}, "Daniel": {"a": 1, "b": 2}, "Thiago": {"a": 3, "b": 2}, "Rafael": {"a": 2, "b": 2}, "Dani": {"a": 2, "b": 1}}, "m20": {"Brunna": {"a": 1, "b": 0}, "Leonardo": {"a": 1, "b": 2}, "Fúlvia": {"a": 0, "b": 1}, "Vinicius": {"a": 2, "b": 1}, "Tina": {"a": 2, "b": 1}, "Amaral": {"a": 0, "b": 0}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 1, "b": 0}, "Caio": {"a": 1, "b": 2}, "Daniel": {"a": 3, "b": 2}, "Thiago": {"a": 2, "b": 2}, "Rafael": {"a": 1, "b": 1}, "Dani": {"a": 1, "b": 1}}, "m21": {"Brunna": {"a": 1, "b": 2}, "Leonardo": {"a": 1, "b": 1}, "Fúlvia": {"a": 2, "b": 1}, "Vinicius": {"a": 0, "b": 2}, "Tina": {"a": 2, "b": 3}, "Amaral": {"a": 1, "b": 2}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 0, "b": 1}, "Caio": {"a": 2, "b": 2}, "Daniel": {"a": 2, "b": 2}, "Thiago": {"a": 4, "b": 2}, "Rafael": {"a": 1, "b": 1}, "Dani": {"a": 2, "b": 1}}, "m22": {"Brunna": {"a": 2, "b": 2}, "Leonardo": {"a": 2, "b": 0}, "Fúlvia": {"a": 1, "b": 0}, "Vinicius": {"a": 3, "b": 2}, "Tina": {"a": 3, "b": 1}, "Amaral": {"a": 1, "b": 0}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 2, "b": 1}, "Caio": {"a": 1, "b": 0}, "Daniel": {"a": 1, "b": 1}, "Thiago": {"a": 2, "b": 1}, "Rafael": {"a": 3, "b": 1}, "Dani": {"a": 2, "b": 0}}, "m23": {"Brunna": {"a": 3, "b": 1}, "Leonardo": {"a": 1, "b": 1}, "Fúlvia": {"a": 1, "b": 3}, "Vinicius": {"a": 1, "b": 0}, "Tina": {"a": 3, "b": 1}, "Amaral": {"a": 2, "b": 0}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 2, "b": 2}, "Caio": {"a": 0, "b": 2}, "Daniel": {"a": 2, "b": 1}, "Thiago": {"a": 2, "b": 2}, "Rafael": {"a": 2, "b": 1}, "Dani": {"a": 1, "b": 1}}, "m24": {"Brunna": {"a": 2, "b": 2}, "Leonardo": {"a": 2, "b": 1}, "Fúlvia": {"a": 2, "b": 0}, "Vinicius": {"a": 2, "b": 2}, "Tina": {"a": 2, "b": 1}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 1, "b": 0}, "Caio": {"a": 2, "b": 1}, "Daniel": {"a": 2, "b": 2}, "Thiago": {"a": 3, "b": 1}, "Rafael": {"a": 1, "b": 2}, "Dani": {"a": 2, "b": 1}}, "m25": {"Brunna": {"a": 4, "b": 0}, "Leonardo": {"a": 3, "b": 0}, "Fúlvia": {"a": 4, "b": 0}, "Vinicius": {"a": 8, "b": 0}, "Tina": {"a": 4, "b": 2}, "Amaral": {"a": 4, "b": 0}, "Bruna": {"a": 4, "b": 0}, "Eduardo": {"a": 5, "b": 0}, "Caio": {"a": 3, "b": 0}, "Daniel": {"a": 3, "b": 0}, "Thiago": {"a": 5, "b": 0}, "Rafael": {"a": 6, "b": 0}, "Dani": {"a": 3, "b": 0}}, "m26": {"Brunna": {"a": 1, "b": 1}, "Leonardo": {"a": 1, "b": 2}, "Fúlvia": {"a": 1, "b": 2}, "Vinicius": {"a": 2, "b": 3}, "Tina": {"a": 2, "b": 3}, "Amaral": {"a": 1, "b": 2}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 0, "b": 2}, "Caio": {"a": 2, "b": 2}, "Daniel": {"a": 4, "b": 2}, "Thiago": {"a": 3, "b": 2}, "Rafael": {"a": 2, "b": 1}, "Dani": {"a": 1, "b": 1}}, "m27": {"Brunna": {"a": 3, "b": 1}, "Leonardo": {"a": 2, "b": 0}, "Fúlvia": {"a": 3, "b": 0}, "Vinicius": {"a": 3, "b": 1}, "Tina": {"a": 3, "b": 2}, "Amaral": {"a": 2, "b": 0}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 3, "b": 1}, "Caio": {"a": 1, "b": 0}, "Daniel": {"a": 2, "b": 1}, "Thiago": {"a": 2, "b": 0}, "Rafael": {"a": 3, "b": 1}, "Dani": {"a": 2, "b": 1}}, "m28": {"Brunna": {"a": 0, "b": 0}, "Leonardo": {"a": 3, "b": 0}, "Fúlvia": {"a": 3, "b": 1}, "Vinicius": {"a": 5, "b": 0}, "Tina": {"a": 3, "b": 0}, "Amaral": {"a": 2, "b": 0}, "Bruna": {"a": 3, "b": 0}, "Eduardo": {"a": 3, "b": 0}, "Caio": {"a": 2, "b": 0}, "Daniel": {"a": 3, "b": 0}, "Thiago": {"a": 2, "b": 1}, "Rafael": {"a": 3, "b": 0}, "Dani": {"a": 2, "b": 0}}, "m29": {"Brunna": {"a": 2, "b": 1}, "Leonardo": {"a": 3, "b": 1}, "Fúlvia": {"a": 2, "b": 0}, "Vinicius": {"a": 3, "b": 2}, "Tina": {"a": 3, "b": 1}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 2, "b": 1}, "Caio": {"a": 2, "b": 0}, "Daniel": {"a": 2, "b": 1}, "Thiago": {"a": 3, "b": 2}, "Rafael": {"a": 3, "b": 1}, "Dani": {"a": 2, "b": 1}}, "m30": {"Brunna": {"a": 1, "b": 0}, "Leonardo": {"a": 2, "b": 0}, "Fúlvia": {"a": 1, "b": 1}, "Vinicius": {"a": 6, "b": 0}, "Tina": {"a": 2, "b": 2}, "Amaral": {"a": 2, "b": 0}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 3, "b": 1}, "Caio": {"a": 2, "b": 1}, "Daniel": {"a": 3, "b": 1}, "Thiago": {"a": 1, "b": 1}, "Rafael": {"a": 2, "b": 0}, "Dani": {"a": 2, "b": 1}}, "m31": {"Brunna": {"a": 2, "b": 2}, "Leonardo": {"a": 1, "b": 1}, "Fúlvia": {"a": 3, "b": 1}, "Vinicius": {"a": 1, "b": 2}, "Tina": {"a": 3, "b": 3}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 0, "b": 2}, "Caio": {"a": 2, "b": 2}, "Daniel": {"a": 2, "b": 2}, "Thiago": {"a": 3, "b": 2}, "Rafael": {"a": 3, "b": 1}, "Dani": {"a": 2, "b": 1}}, "m32": {"Brunna": {"a": 1, "b": 1}, "Leonardo": {"a": 1, "b": 0}, "Fúlvia": {"a": 2, "b": 1}, "Vinicius": {"a": 1, "b": 0}, "Tina": {"a": 2, "b": 0}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 2, "b": 0}, "Caio": {"a": 1, "b": 0}, "Daniel": {"a": 3, "b": 1}, "Thiago": {"a": 2, "b": 0}, "Rafael": {"a": 1, "b": 1}, "Dani": {"a": 1, "b": 0}}, "m33": {"Brunna": {"a": 2, "b": 0}, "Leonardo": {"a": 1, "b": 1}, "Fúlvia": {"a": 2, "b": 0}, "Vinicius": {"a": 3, "b": 1}, "Tina": {"a": 3, "b": 2}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 1, "b": 1}, "Caio": {"a": 2, "b": 1}, "Daniel": {"a": 2, "b": 2}, "Thiago": {"a": 2, "b": 2}, "Rafael": {"a": 2, "b": 1}, "Dani": {"a": 2, "b": 1}}, "m34": {"Brunna": {"a": 2, "b": 0}, "Leonardo": {"a": 1, "b": 0}, "Fúlvia": {"a": 3, "b": 2}, "Vinicius": {"a": 2, "b": 0}, "Tina": {"a": 2, "b": 0}, "Amaral": {"a": 1, "b": 0}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 2, "b": 1}, "Caio": {"a": 2, "b": 1}, "Daniel": {"a": 3, "b": 1}, "Thiago": {"a": 3, "b": 1}, "Rafael": {"a": 2, "b": 1}, "Dani": {"a": 2, "b": 1}}, "m35": {"Brunna": {"a": 2, "b": 1}, "Leonardo": {"a": 1, "b": 0}, "Fúlvia": {"a": 3, "b": 0}, "Vinicius": {"a": 1, "b": 0}, "Tina": {"a": 3, "b": 1}, "Amaral": {"a": 2, "b": 0}, "Bruna": {"a": 3, "b": 1}, "Eduardo": {"a": 2, "b": 0}, "Caio": {"a": 1, "b": 1}, "Daniel": {"a": 2, "b": 0}, "Thiago": {"a": 1, "b": 3}, "Rafael": {"a": 3, "b": 0}, "Dani": {"a": 3, "b": 0}}, "m36": {"Brunna": {"a": 2, "b": 1}, "Leonardo": {"a": 1, "b": 1}, "Fúlvia": {"a": 1, "b": 2}, "Vinicius": {"a": 2, "b": 0}, "Tina": {"a": 2, "b": 1}, "Amaral": {"a": 1, "b": 0}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 3, "b": 1}, "Caio": {"a": 2, "b": 1}, "Daniel": {"a": 3, "b": 1}, "Thiago": {"a": 1, "b": 3}, "Rafael": {"a": 1, "b": 1}, "Dani": {"a": 2, "b": 1}}, "m37": {"Brunna": {"a": 3, "b": 1}, "Leonardo": {"a": 2, "b": 0}, "Fúlvia": {"a": 1, "b": 1}, "Vinicius": {"a": 4, "b": 0}, "Tina": {"a": 2, "b": 0}, "Amaral": {"a": 1, "b": 0}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 1, "b": 1}, "Caio": {"a": 2, "b": 1}, "Daniel": {"a": 3, "b": 2}, "Thiago": {"a": 4, "b": 2}, "Rafael": {"a": 4, "b": 1}, "Dani": {"a": 2, "b": 1}}, "m38": {"Brunna": {"a": 1, "b": 2}, "Leonardo": {"a": 0, "b": 2}, "Fúlvia": {"a": 0, "b": 3}, "Vinicius": {"a": 0, "b": 2}, "Tina": {"a": 2, "b": 1}, "Amaral": {"a": 0, "b": 1}, "Bruna": {"a": 0, "b": 2}, "Eduardo": {"a": 0, "b": 4}, "Caio": {"a": 3, "b": 2}, "Daniel": {"a": 1, "b": 2}, "Thiago": {"a": 1, "b": 2}, "Rafael": {"a": 0, "b": 0}, "Dani": {"a": 1, "b": 2}}, "m39": {"Brunna": {"a": 2, "b": 1}, "Leonardo": {"a": 2, "b": 0}, "Fúlvia": {"a": 3, "b": 1}, "Vinicius": {"a": 5, "b": 0}, "Tina": {"a": 3, "b": 3}, "Amaral": {"a": 2, "b": 0}, "Bruna": {"a": 3, "b": 0}, "Eduardo": {"a": 3, "b": 0}, "Caio": {"a": 3, "b": 1}, "Daniel": {"a": 1, "b": 0}, "Thiago": {"a": 2, "b": 1}, "Rafael": {"a": 3, "b": 0}, "Dani": {"a": 3, "b": 0}}, "m40": {"Brunna": {"a": 0, "b": 1}, "Leonardo": {"a": 1, "b": 3}, "Fúlvia": {"a": 0, "b": 0}, "Vinicius": {"a": 0, "b": 2}, "Tina": {"a": 2, "b": 2}, "Amaral": {"a": 1, "b": 0}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 2, "b": 2}, "Caio": {"a": 2, "b": 2}, "Daniel": {"a": 0, "b": 2}, "Thiago": {"a": 2, "b": 3}, "Rafael": {"a": 1, "b": 1}, "Dani": {"a": 1, "b": 1}}, "m41": {"Brunna": {"a": 2, "b": 0}, "Leonardo": {"a": 2, "b": 2}, "Fúlvia": {"a": 4, "b": 1}, "Vinicius": {"a": 4, "b": 1}, "Tina": {"a": 3, "b": 1}, "Amaral": {"a": 2, "b": 0}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 1, "b": 0}, "Caio": {"a": 3, "b": 1}, "Daniel": {"a": 2, "b": 2}, "Thiago": {"a": 3, "b": 2}, "Rafael": {"a": 3, "b": 1}, "Dani": {"a": 2, "b": 0}}, "m42": {"Brunna": {"a": 0, "b": 1}, "Leonardo": {"a": 2, "b": 0}, "Fúlvia": {"a": 1, "b": 2}, "Vinicius": {"a": 0, "b": 0}, "Tina": {"a": 2, "b": 3}, "Amaral": {"a": 1, "b": 1}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 2, "b": 0}, "Caio": {"a": 2, "b": 1}, "Daniel": {"a": 1, "b": 1}, "Thiago": {"a": 4, "b": 2}, "Rafael": {"a": 2, "b": 1}, "Dani": {"a": 1, "b": 1}}, "m43": {"Brunna": {"a": 4, "b": 0}, "Leonardo": {"a": 5, "b": 0}, "Fúlvia": {"a": 3, "b": 1}, "Vinicius": {"a": 10, "b": 0}, "Tina": {"a": 3, "b": 2}, "Amaral": {"a": 3, "b": 0}, "Bruna": {"a": 3, "b": 0}, "Eduardo": {"a": 5, "b": 0}, "Caio": {"a": 4, "b": 0}, "Daniel": {"a": 3, "b": 0}, "Thiago": {"a": 3, "b": 1}, "Rafael": {"a": 5, "b": 0}, "Dani": {"a": 3, "b": 0}}, "m44": {"Brunna": {"a": 3, "b": 0}, "Leonardo": {"a": 1, "b": 0}, "Fúlvia": {"a": 2, "b": 0}, "Vinicius": {"a": 3, "b": 2}, "Tina": {"a": 3, "b": 1}, "Amaral": {"a": 1, "b": 0}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 2, "b": 1}, "Caio": {"a": 2, "b": 0}, "Daniel": {"a": 2, "b": 1}, "Thiago": {"a": 3, "b": 0}, "Rafael": {"a": 3, "b": 1}, "Dani": {"a": 2, "b": 1}}, "m45": {"Brunna": {"a": 1, "b": 2}, "Leonardo": {"a": 1, "b": 0}, "Fúlvia": {"a": 2, "b": 2}, "Vinicius": {"a": 3, "b": 1}, "Tina": {"a": 3, "b": 4}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 2, "b": 2}, "Caio": {"a": 2, "b": 1}, "Daniel": {"a": 0, "b": 0}, "Thiago": {"a": 3, "b": 2}, "Rafael": {"a": 2, "b": 2}, "Dani": {"a": 1, "b": 1}}, "m46": {"Brunna": {"a": 0, "b": 1}, "Leonardo": {"a": 0, "b": 2}, "Fúlvia": {"a": 0, "b": 1}, "Vinicius": {"a": 1, "b": 4}, "Tina": {"a": 3, "b": 1}, "Amaral": {"a": 1, "b": 2}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 0, "b": 2}, "Caio": {"a": 1, "b": 1}, "Daniel": {"a": 2, "b": 2}, "Thiago": {"a": 0, "b": 0}, "Rafael": {"a": 0, "b": 2}, "Dani": {"a": 1, "b": 1}}, "m47": {"Brunna": {"a": 3, "b": 0}, "Leonardo": {"a": 1, "b": 0}, "Fúlvia": {"a": 2, "b": 0}, "Vinicius": {"a": 4, "b": 0}, "Tina": {"a": 3, "b": 2}, "Amaral": {"a": 3, "b": 0}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 3, "b": 0}, "Caio": {"a": 3, "b": 0}, "Thiago": {"a": 3, "b": 2}, "Rafael": {"a": 3, "b": 0}, "Dani": {"a": 2, "b": 0}}, "m48": {"Brunna": {"a": 2, "b": 0}, "Leonardo": {"a": 3, "b": 0}, "Fúlvia": {"a": 3, "b": 0}, "Vinicius": {"a": 6, "b": 0}, "Tina": {"a": 3, "b": 1}, "Amaral": {"a": 2, "b": 0}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 2, "b": 0}, "Caio": {"a": 2, "b": 0}, "Daniel": {"a": 3, "b": 1}, "Thiago": {"a": 4, "b": 0}, "Rafael": {"a": 2, "b": 0}, "Dani": {"a": 2, "b": 0}}, "m49": {"Brunna": {"a": 3, "b": 0}, "Leonardo": {"a": 2, "b": 0}, "Fúlvia": {"a": 2, "b": 0}, "Vinicius": {"a": 6, "b": 0}, "Tina": {"a": 4, "b": 0}, "Amaral": {"a": 3, "b": 0}, "Bruna": {"a": 3, "b": 0}, "Eduardo": {"a": 3, "b": 0}, "Caio": {"a": 3, "b": 1}, "Daniel": {"a": 3, "b": 1}, "Thiago": {"a": 4, "b": 0}, "Rafael": {"a": 4, "b": 1}, "Dani": {"a": 3, "b": 0}}, "m50": {"Brunna": {"a": 2, "b": 2}, "Leonardo": {"a": 1, "b": 0}, "Fúlvia": {"a": 1, "b": 1}, "Vinicius": {"a": 4, "b": 2}, "Tina": {"a": 2, "b": 2}, "Amaral": {"a": 1, "b": 1}, "Bruna": {"a": 0, "b": 2}, "Eduardo": {"a": 1, "b": 0}, "Caio": {"a": 2, "b": 2}, "Daniel": {"a": 2, "b": 3}, "Thiago": {"a": 3, "b": 1}, "Rafael": {"a": 2, "b": 0}, "Dani": {"a": 2, "b": 2}}, "m51": {"Brunna": {"a": 2, "b": 0}, "Leonardo": {"a": 3, "b": 1}, "Fúlvia": {"a": 2, "b": 0}, "Vinicius": {"a": 1, "b": 1}, "Tina": {"a": 3, "b": 1}, "Amaral": {"a": 3, "b": 0}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 1, "b": 1}, "Caio": {"a": 2, "b": 1}, "Daniel": {"a": 2, "b": 1}, "Thiago": {"a": 2, "b": 2}, "Rafael": {"a": 3, "b": 0}, "Dani": {"a": 1, "b": 1}}, "m52": {"Brunna": {"a": 0, "b": 2}, "Leonardo": {"a": 0, "b": 2}, "Fúlvia": {"a": 0, "b": 2}, "Vinicius": {"a": 0, "b": 4}, "Tina": {"a": 2, "b": 1}, "Amaral": {"a": 0, "b": 1}, "Bruna": {"a": 0, "b": 2}, "Eduardo": {"a": 2, "b": 0}, "Caio": {"a": 1, "b": 2}, "Daniel": {"a": 2, "b": 3}, "Thiago": {"a": 1, "b": 0}, "Rafael": {"a": 0, "b": 2}, "Dani": {"a": 0, "b": 2}}, "m53": {"Brunna": {"a": 5, "b": 1}, "Leonardo": {"a": 3, "b": 0}, "Fúlvia": {"a": 3, "b": 2}, "Vinicius": {"a": 4, "b": 2}, "Tina": {"a": 2, "b": 0}, "Amaral": {"a": 3, "b": 1}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 3, "b": 0}, "Caio": {"a": 1, "b": 0}, "Daniel": {"a": 1, "b": 0}, "Thiago": {"a": 3, "b": 0}, "Rafael": {"a": 3, "b": 1}, "Dani": {"a": 2, "b": 0}}, "m54": {"Brunna": {"a": 0, "b": 0}, "Leonardo": {"a": 2, "b": 0}, "Fúlvia": {"a": 2, "b": 0}, "Vinicius": {"a": 3, "b": 0}, "Tina": {"a": 3, "b": 2}, "Amaral": {"a": 1, "b": 0}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 3, "b": 3}, "Caio": {"a": 2, "b": 0}, "Daniel": {"a": 2, "b": 2}, "Thiago": {"a": 1, "b": 0}, "Rafael": {"a": 2, "b": 1}, "Dani": {"a": 2, "b": 0}}, "m55": {"Brunna": {"a": 3, "b": 0}, "Leonardo": {"a": 2, "b": 0}, "Fúlvia": {"a": 4, "b": 0}, "Vinicius": {"a": 3, "b": 0}, "Tina": {"a": 5, "b": 1}, "Amaral": {"a": 3, "b": 0}, "Bruna": {"a": 3, "b": 0}, "Eduardo": {"a": 3, "b": 0}, "Caio": {"a": 2, "b": 0}, "Daniel": {"a": 3, "b": 1}, "Thiago": {"a": 3, "b": 1}, "Rafael": {"a": 3, "b": 0}, "Dani": {"a": 3, "b": 0}}, "m56": {"Brunna": {"a": 2, "b": 0}, "Leonardo": {"a": 2, "b": 1}, "Fúlvia": {"a": 3, "b": 1}, "Vinicius": {"a": 4, "b": 0}, "Tina": {"a": 2, "b": 0}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 1, "b": 1}, "Caio": {"a": 1, "b": 1}, "Daniel": {"a": 2, "b": 1}, "Thiago": {"a": 0, "b": 0}, "Rafael": {"a": 2, "b": 0}, "Dani": {"a": 2, "b": 0}}, "m57": {"Brunna": {"a": 2, "b": 0}, "Leonardo": {"a": 2, "b": 1}, "Fúlvia": {"a": 2, "b": 0}, "Vinicius": {"a": 3, "b": 0}, "Tina": {"a": 4, "b": 2}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 4, "b": 0}, "Caio": {"a": 2, "b": 0}, "Daniel": {"a": 2, "b": 1}, "Thiago": {"a": 4, "b": 2}, "Rafael": {"a": 2, "b": 1}, "Dani": {"a": 2, "b": 1}}, "m58": {"Brunna": {"a": 2, "b": 1}, "Leonardo": {"a": 1, "b": 0}, "Fúlvia": {"a": 2, "b": 1}, "Vinicius": {"a": 3, "b": 0}, "Tina": {"a": 2, "b": 2}, "Amaral": {"a": 1, "b": 0}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 2, "b": 2}, "Caio": {"a": 3, "b": 3}, "Daniel": {"a": 2, "b": 2}, "Thiago": {"a": 0, "b": 0}, "Rafael": {"a": 1, "b": 0}, "Dani": {"a": 2, "b": 0}}, "m59": {"Brunna": {"a": 4, "b": 1}, "Leonardo": {"a": 4, "b": 0}, "Fúlvia": {"a": 3, "b": 1}, "Vinicius": {"a": 5, "b": 0}, "Tina": {"a": 4, "b": 1}, "Amaral": {"a": 3, "b": 0}, "Bruna": {"a": 3, "b": 0}, "Eduardo": {"a": 4, "b": 0}, "Caio": {"a": 2, "b": 0}, "Daniel": {"a": 1, "b": 0}, "Thiago": {"a": 4, "b": 0}, "Rafael": {"a": 4, "b": 0}, "Dani": {"a": 2, "b": 0}}, "m60": {"Brunna": {"a": 2, "b": 0}, "Leonardo": {"a": 0, "b": 0}, "Fúlvia": {"a": 2, "b": 0}, "Vinicius": {"a": 0, "b": 1}, "Tina": {"a": 3, "b": 1}, "Amaral": {"a": 1, "b": 0}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 2, "b": 1}, "Caio": {"a": 1, "b": 0}, "Daniel": {"a": 1, "b": 1}, "Thiago": {"a": 1, "b": 1}, "Rafael": {"a": 1, "b": 1}, "Dani": {"a": 1, "b": 1}}, "m61": {"Brunna": {"a": 3, "b": 0}, "Leonardo": {"a": 3, "b": 0}, "Fúlvia": {"a": 3, "b": 0}, "Vinicius": {"a": 5, "b": 0}, "Tina": {"a": 3, "b": 2}, "Amaral": {"a": 3, "b": 0}, "Bruna": {"a": 3, "b": 0}, "Eduardo": {"a": 3, "b": 1}, "Caio": {"a": 1, "b": 0}, "Daniel": {"a": 3, "b": 0}, "Thiago": {"a": 3, "b": 0}, "Rafael": {"a": 2, "b": 0}, "Dani": {"a": 2, "b": 0}}, "m62": {"Brunna": {"a": 0, "b": 1}, "Leonardo": {"a": 0, "b": 2}, "Fúlvia": {"a": 0, "b": 3}, "Vinicius": {"a": 0, "b": 4}, "Tina": {"a": 2, "b": 3}, "Amaral": {"a": 0, "b": 2}, "Bruna": {"a": 1, "b": 2}, "Eduardo": {"a": 0, "b": 3}, "Caio": {"a": 0, "b": 2}, "Daniel": {"a": 2, "b": 3}, "Thiago": {"a": 1, "b": 4}, "Rafael": {"a": 0, "b": 2}, "Dani": {"a": 1, "b": 2}}, "m63": {"Brunna": {"a": 3, "b": 0}, "Leonardo": {"a": 3, "b": 0}, "Fúlvia": {"a": 3, "b": 1}, "Vinicius": {"a": 4, "b": 0}, "Tina": {"a": 3, "b": 2}, "Amaral": {"a": 3, "b": 0}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 4, "b": 0}, "Caio": {"a": 1, "b": 0}, "Daniel": {"a": 1, "b": 0}, "Thiago": {"a": 3, "b": 0}, "Rafael": {"a": 2, "b": 0}, "Dani": {"a": 3, "b": 0}}, "m64": {"Brunna": {"a": 3, "b": 0}, "Leonardo": {"a": 2, "b": 0}, "Fúlvia": {"a": 2, "b": 0}, "Vinicius": {"a": 6, "b": 0}, "Tina": {"a": 3, "b": 1}, "Amaral": {"a": 2, "b": 0}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 5, "b": 0}, "Caio": {"a": 1, "b": 0}, "Daniel": {"a": 3, "b": 0}, "Thiago": {"a": 3, "b": 0}, "Rafael": {"a": 2, "b": 0}, "Dani": {"a": 2, "b": 0}}, "m65": {"Brunna": {"a": 2, "b": 1}, "Leonardo": {"a": 1, "b": 1}, "Fúlvia": {"a": 0, "b": 0}, "Vinicius": {"a": 4, "b": 2}, "Tina": {"a": 1, "b": 3}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 3, "b": 3}, "Caio": {"a": 1, "b": 1}, "Daniel": {"a": 2, "b": 2}, "Thiago": {"a": 2, "b": 2}, "Rafael": {"a": 1, "b": 0}, "Dani": {"a": 2, "b": 1}}, "m66": {"Brunna": {"a": 1, "b": 1}, "Leonardo": {"a": 0, "b": 1}, "Fúlvia": {"a": 1, "b": 0}, "Vinicius": {"a": 2, "b": 0}, "Tina": {"a": 1, "b": 1}, "Amaral": {"a": 0, "b": 1}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 1, "b": 0}, "Caio": {"a": 0, "b": 0}, "Daniel": {"a": 0, "b": 0}, "Thiago": {"a": 1, "b": 0}, "Rafael": {"a": 1, "b": 1}, "Dani": {"a": 1, "b": 1}}, "m67": {"Brunna": {"a": 1, "b": 2}, "Leonardo": {"a": 2, "b": 1}, "Fúlvia": {"a": 2, "b": 1}, "Vinicius": {"a": 2, "b": 1}, "Tina": {"a": 1, "b": 3}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 1, "b": 1}, "Caio": {"a": 2, "b": 2}, "Daniel": {"a": 2, "b": 1}, "Thiago": {"a": 3, "b": 1}, "Rafael": {"a": 2, "b": 2}, "Dani": {"a": 2, "b": 1}}, "m68": {"Brunna": {"a": 3, "b": 1}, "Leonardo": {"a": 2, "b": 2}, "Fúlvia": {"a": 1, "b": 0}, "Vinicius": {"a": 4, "b": 1}, "Tina": {"a": 2, "b": 0}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 2, "b": 0}, "Caio": {"a": 1, "b": 0}, "Daniel": {"a": 3, "b": 1}, "Thiago": {"a": 2, "b": 0}, "Rafael": {"a": 2, "b": 1}, "Dani": {"a": 1, "b": 1}}, "m69": {"Brunna": {"a": 2, "b": 0}, "Leonardo": {"a": 2, "b": 0}, "Fúlvia": {"a": 3, "b": 0}, "Vinicius": {"a": 2, "b": 1}, "Tina": {"a": 2, "b": 1}, "Amaral": {"a": 2, "b": 1}, "Bruna": {"a": 2, "b": 0}, "Eduardo": {"a": 2, "b": 1}, "Caio": {"a": 2, "b": 1}, "Thiago": {"a": 2, "b": 0}, "Rafael": {"a": 3, "b": 0}, "Dani": {"a": 3, "b": 1}}, "m70": {"Brunna": {"a": 0, "b": 2}, "Leonardo": {"a": 1, "b": 3}, "Fúlvia": {"a": 1, "b": 2}, "Vinicius": {"a": 1, "b": 5}, "Tina": {"a": 3, "b": 5}, "Amaral": {"a": 1, "b": 1}, "Bruna": {"a": 1, "b": 1}, "Eduardo": {"a": 0, "b": 3}, "Caio": {"a": 1, "b": 3}, "Daniel": {"a": 2, "b": 3}, "Thiago": {"a": 2, "b": 2}, "Rafael": {"a": 0, "b": 2}, "Dani": {"a": 0, "b": 2}}, "m71": {"Brunna": {"a": 1, "b": 0}, "Leonardo": {"a": 3, "b": 0}, "Fúlvia": {"a": 3, "b": 1}, "Vinicius": {"a": 6, "b": 1}, "Tina": {"a": 4, "b": 2}, "Amaral": {"a": 3, "b": 0}, "Bruna": {"a": 3, "b": 0}, "Eduardo": {"a": 4, "b": 2}, "Caio": {"a": 3, "b": 0}, "Daniel": {"a": 2, "b": 0}, "Thiago": {"a": 4, "b": 0}, "Rafael": {"a": 4, "b": 0}, "Dani": {"a": 3, "b": 1}}, "m72": {"Brunna": {"a": 2, "b": 0}, "Leonardo": {"a": 1, "b": 0}, "Fúlvia": {"a": 3, "b": 0}, "Vinicius": {"a": 3, "b": 2}, "Tina": {"a": 4, "b": 2}, "Amaral": {"a": 1, "b": 2}, "Bruna": {"a": 2, "b": 1}, "Eduardo": {"a": 1, "b": 1}, "Caio": {"a": 1, "b": 0}, "Daniel": {"a": 3, "b": 1}, "Thiago": {"a": 3, "b": 1}, "Rafael": {"a": 2, "b": 0}, "Dani": {"a": 2, "b": 1}}}, "results": {"m1": {"a": 2, "b": 0}, "m2": {"a": 2, "b": 1}, "m7": {"a": 1, "b": 1}, "m8": {"a": 1, "b": 1}, "m13": {"a": 1, "b": 1}, "m14": {"a": 0, "b": 1}, "m19": {"a": 4, "b": 1}, "m20": {"a": 2, "b": 0}}};
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function outcomeSign(a, b) {
+  if (a > b) return 1;
+  if (a < b) return -1;
+  return 0;
+}
+
+function calcPoints(pred, result) {
+  if (!pred || !result) return null;
+  if (pred.a === result.a && pred.b === result.b) return POINTS_EXACT;
+  if (outcomeSign(pred.a, pred.b) === outcomeSign(result.a, result.b)) return POINTS_OUTCOME;
+  return 0;
+}
+
+function computeRanking(data) {
+  return data.participants
+    .map((name) => {
+      let points = 0,
+        exact = 0,
+        partial = 0,
+        played = 0;
+      data.matches.forEach((m) => {
+        const result = data.results[m.id];
+        if (!result) return;
+        const pred = data.predictions[m.id]?.[name];
+        const pts = calcPoints(pred, result);
+        if (pts === null) return;
+        played += 1;
+        points += pts;
+        if (pts === POINTS_EXACT) exact += 1;
+        else if (pts === POINTS_OUTCOME) partial += 1;
+      });
+      return { name, points, exact, partial, played };
+    })
+    .sort((a, b) => b.points - a.points || b.exact - a.exact || a.name.localeCompare(b.name));
+}
+
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700&display=swap');
+
+.bolao { font-family: 'Work Sans', sans-serif; background: #FBF7EE; color: #20241F; min-height: 100vh; padding-bottom: 40px; }
+.bolao * { box-sizing: border-box; }
+
+.bolao-header { background: linear-gradient(135deg, #173620 0%, #1B5E3A 60%, #2E7D52 100%); color: #FBF7EE; padding: 28px 18px 22px; }
+.bolao-header h1 { font-family: 'Anton', sans-serif; font-size: 22px; letter-spacing: .5px; margin: 0; text-transform: uppercase; line-height: 1.25; }
+.header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.refresh-btn { flex-shrink: 0; background: rgba(255,255,255,0.12); color: #F2C14E; border: 1px solid rgba(242,193,78,0.5); border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 700; font-family: 'Work Sans', sans-serif; cursor: pointer; }
+.refresh-btn:disabled { opacity: .6; }
+.bolao-header p { margin: 8px 0 0; font-size: 14px; color: #D9E8DD; line-height: 1.5; }
+.bolao-header .leader { color: #F2C14E; font-weight: 700; }
+
+.load-error { background: #FBE9E1; color: #C0492B; font-size: 12px; font-weight: 600; padding: 10px 16px; text-align: center; line-height: 1.5; }
+.bolao-nav { display: flex; background: #173620; position: sticky; top: 0; z-index: 10; }
+.bolao-nav button { flex: 1; background: none; border: none; color: #BFD3C5; font-family: 'Work Sans', sans-serif; font-weight: 600; font-size: 13px; padding: 13px 4px; cursor: pointer; border-bottom: 3px solid transparent; transition: color .15s, border-color .15s; }
+.bolao-nav button.active { color: #F2C14E; border-bottom-color: #F2C14E; }
+
+.bolao-main { padding: 16px; max-width: 720px; margin: 0 auto; }
+
+.card { background: #FFFFFF; border: 1px solid #E6E0D2; border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+.card h2 { font-family: 'Anton', sans-serif; font-size: 18px; margin: 0 0 12px; letter-spacing: .5px; text-transform: uppercase; color: #1B5E3A; }
+.card h3 { font-size: 14px; margin: 0 0 8px; color: #5B5448; }
+
+.empty { text-align: center; color: #9A917F; padding: 28px 12px; font-size: 14px; line-height: 1.6; }
+
+/* Podium */
+.podium { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 16px; }
+.podium-spot { flex: 1; border-radius: 12px 12px 4px 4px; text-align: center; padding: 10px 6px; color: #173620; }
+.podium-spot .medal { font-size: 26px; display: block; margin-bottom: 4px; }
+.podium-spot .pname { font-weight: 700; font-size: 13px; word-break: break-word; }
+.podium-spot .ppts { font-family: 'Anton', sans-serif; font-size: 20px; margin-top: 2px; }
+.podium-1 { background: #F2C14E; height: 118px; order: 2; }
+.podium-2 { background: #E4DCC8; height: 96px; order: 1; }
+.podium-3 { background: #EAD9BE; height: 82px; order: 3; }
+
+/* Ranking table */
+.rank-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rank-table th { text-align: left; font-size: 11px; text-transform: uppercase; color: #9A917F; padding: 6px 4px; border-bottom: 1px solid #E6E0D2; }
+.rank-table td { padding: 9px 4px; border-bottom: 1px solid #F1EDE2; }
+.rank-table td.num, .rank-table th.num { text-align: center; }
+.rank-table tr:first-child td { font-weight: 700; }
+.pos-badge { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #F1EDE2; font-size: 11px; font-weight: 700; }
+
+/* Match select */
+.select-field, .text-field, textarea.text-field { width: 100%; padding: 10px 12px; border: 1px solid #D8D2C2; border-radius: 8px; font-size: 14px; font-family: 'Work Sans', sans-serif; background: #fff; color: #20241F; }
+.field-label { display: block; font-size: 12px; font-weight: 600; color: #5B5448; margin: 10px 0 4px; }
+
+/* Match card */
+.match-block { border: 1px solid #E6E0D2; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+.match-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.match-fase { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: #9A917F; font-weight: 700; }
+.match-status { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.status-pending { background: #F1EDE2; color: #9A917F; }
+.status-done { background: #DDEFE3; color: #1B5E3A; }
+.match-teams { font-family: 'Anton', sans-serif; font-size: 17px; display: flex; justify-content: space-between; align-items: center; }
+.match-result { font-family: 'Anton', sans-serif; font-size: 17px; background: #173620; color: #F2C14E; padding: 2px 12px; border-radius: 6px; min-width: 56px; text-align: center; }
+
+/* Predictions list */
+.pred-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F1EDE2; font-size: 14px; }
+.pred-row:last-child { border-bottom: none; }
+.pred-score { font-family: 'Anton', sans-serif; font-size: 15px; background: #F1EDE2; padding: 3px 10px; border-radius: 6px; min-width: 50px; text-align: center; }
+.pred-points { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; min-width: 50px; text-align: center; }
+.pts-5 { background: #1B5E3A; color: #fff; }
+.pts-3 { background: #F2C14E; color: #173620; }
+.pts-0 { background: #F1EDE2; color: #9A917F; }
+.pts-none { background: transparent; color: #C9C2B2; }
+
+/* Admin */
+.admin-lock { text-align: center; padding: 30px 16px; }
+.admin-lock input { text-align: center; font-size: 22px; letter-spacing: 6px; max-width: 160px; margin: 12px auto; }
+.subnav { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.subnav button { background: #F1EDE2; border: none; padding: 7px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #5B5448; cursor: pointer; }
+.subnav button.active { background: #1B5E3A; color: #fff; }
+
+.btn { background: #1B5E3A; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
+.btn.secondary { background: #F1EDE2; color: #5B5448; }
+.btn.danger { background: #fff; color: #C0492B; border: 1px solid #E6C9C0; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.score-input { width: 52px; padding: 8px; text-align: center; border: 1px solid #D8D2C2; border-radius: 8px; font-family: 'Anton', sans-serif; font-size: 16px; }
+.score-vs { font-family: 'Anton', sans-serif; color: #9A917F; }
+
+.list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F1EDE2; font-size: 13px; }
+.list-item:last-child { border-bottom: none; }
+.tag { font-size: 10px; background: #F1EDE2; color: #9A917F; padding: 1px 6px; border-radius: 10px; margin-left: 6px; }
+
+.saved-msg { font-size: 12px; color: #1B5E3A; font-weight: 600; margin-top: 6px; }
+.error-msg { font-size: 12px; color: #C0492B; font-weight: 600; margin-top: 6px; }
+.loading { text-align: center; padding: 60px 16px; color: #9A917F; }
+.hint { font-size: 12px; color: #9A917F; margin-top: 6px; line-height: 1.5; }
+`;
+
+function MatchLabel({ m }) {
+  return (
+    <span>
+      {m.teamA} x {m.teamB}
+      {m.fase ? <span className="tag">{m.fase}</span> : null}
+    </span>
+  );
+}
+
+function groupMatches(matches) {
+  const groups = {};
+  matches.forEach((m) => {
+    const key = m.fase || "Outros jogos";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(m);
+  });
+  return groups;
+}
+
+function dateSortKey(d) {
+  if (!d) return 999999;
+  const parts = d.split("/");
+  if (parts.length < 2) return 999999;
+  const dd = parseInt(parts[0], 10) || 0;
+  const mm = parseInt(parts[1], 10) || 0;
+  return mm * 100 + dd;
+}
+
+function getSortedDates(matches) {
+  const dates = [...new Set(matches.map((m) => m.data || "Sem data"))];
+  return dates.sort((a, b) => dateSortKey(a) - dateSortKey(b));
+}
+
+function groupMatchesByDate(matches) {
+  const groups = {};
+  matches.forEach((m) => {
+    const key = m.data || "Sem data";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(m);
+  });
+  return groups;
+}
+
+function App() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState("ranking");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [adminTab, setAdminTab] = useState("participantes");
+  const [selectedDate, setSelectedDate] = useState("");
+
+  const [loadError, setLoadError] = useState("");
+
+  async function loadData() {
+    try {
+      const res = await withTimeout(
+        fetch(`${JSONBIN_URL}/latest`, {
+          headers: { "X-Access-Key": JSONBIN_ACCESS_KEY },
+        }),
+        10000,
+        "get"
+      );
+      if (!res.ok) throw new Error(`http:${res.status}`);
+      const json = await res.json();
+      const record = json && json.record;
+      if (record && Array.isArray(record.matches)) {
+        setData({ ...DEFAULT_DATA, ...record });
+      } else {
+        setData((prev) => prev || DEFAULT_DATA);
+      }
+      setLoadError("");
+    } catch (e) {
+      setData((prev) => prev || DEFAULT_DATA);
+      if (String(e.message).startsWith("timeout")) {
+        setLoadError("Demorou demais para carregar os dados. Toque em \"Atualizar\" para tentar de novo.");
+      } else {
+        setLoadError(`Não foi possível carregar os dados (detalhe técnico: ${e.message || e}). Toque em "Atualizar" para tentar de novo.`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadData();
+    function handleVisibility() {
+      if (document.visibilityState === "visible") loadData();
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
+
+  async function persist(newData) {
+    setData(newData);
+    setSaving(true);
+    setError("");
+    try {
+      const res = await withTimeout(
+        fetch(JSONBIN_URL, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Access-Key": JSONBIN_ACCESS_KEY,
+          },
+          body: JSON.stringify(newData),
+        }),
+        10000,
+        "set"
+      );
+      if (!res.ok) throw new Error(`http:${res.status}`);
+    } catch (e) {
+      if (String(e.message).startsWith("timeout")) {
+        setError("O salvamento demorou demais. Tente de novo em alguns segundos.");
+      } else {
+        setError(`Não foi possível salvar (detalhe técnico: ${e.message || e}). Verifique sua conexão e tente de novo.`);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const ranking = useMemo(() => (data ? computeRanking(data) : []), [data]);
+  const finishedCount = useMemo(
+    () => (data ? data.matches.filter((m) => data.results[m.id]).length : 0),
+    [data]
+  );
+
+  if (loading || !data) {
+    return (
+      <div className="bolao">
+        <style>{CSS}</style>
+        <div className="loading">Carregando bolão...</div>
+      </div>
+    );
+  }
+
+  const leader = ranking.find((r) => r.played > 0);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  }
+
+  return (
+    <div className="bolao">
+      <style>{CSS}</style>
+      <header className="bolao-header">
+        <div className="header-top">
+          <h1>🏆 Bolão Copa 2026 — Família Corredor</h1>
+          <button className="refresh-btn" onClick={handleRefresh} disabled={refreshing}>
+            {refreshing ? "..." : "↻ Atualizar"}
+          </button>
+        </div>
+        <p>
+          {data.matches.length} jogo(s) cadastrado(s) · {finishedCount} finalizado(s)
+          {leader ? (
+            <>
+              {" "}· líder: <span className="leader">{leader.name} ({leader.points} pts)</span>
+            </>
+          ) : null}
+        </p>
+      </header>
+      {loadError && <div className="load-error">{loadError}</div>}
+
+      <nav className="bolao-nav">
+        <button className={activeTab === "ranking" ? "active" : ""} onClick={() => setActiveTab("ranking")}>
+          Ranking
+        </button>
+        <button className={activeTab === "palpites" ? "active" : ""} onClick={() => setActiveTab("palpites")}>
+          Palpites
+        </button>
+        <button className={activeTab === "jogos" ? "active" : ""} onClick={() => setActiveTab("jogos")}>
+          Jogos
+        </button>
+        <button className={activeTab === "admin" ? "active" : ""} onClick={() => setActiveTab("admin")}>
+          🔒 Organizador
+        </button>
+      </nav>
+
+      <main className="bolao-main">
+        {activeTab === "ranking" && <RankingTab ranking={ranking} />}
+        {activeTab === "palpites" && (
+          <PalpitesTab
+            data={data}
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+          />
+        )}
+        {activeTab === "jogos" && <JogosTab data={data} />}
+        {activeTab === "admin" && (
+          <AdminTab
+            data={data}
+            persist={persist}
+            isAdmin={isAdmin}
+            setIsAdmin={setIsAdmin}
+            pinInput={pinInput}
+            setPinInput={setPinInput}
+            pinError={pinError}
+            setPinError={setPinError}
+            adminTab={adminTab}
+            setAdminTab={setAdminTab}
+            saving={saving}
+            error={error}
+          />
+        )}
+      </main>
+    </div>
+  );
+}
+
+function RankingTab({ ranking }) {
+  if (ranking.length === 0) {
+    return (
+      <div className="card">
+        <div className="empty">
+          Nenhum participante cadastrado ainda.
+          <br />
+          O organizador pode adicionar os nomes na aba "Organizador".
+        </div>
+      </div>
+    );
+  }
+
+  const top3 = ranking.slice(0, 3);
+  const rest = ranking.slice(3);
+
+  return (
+    <div className="card">
+      <h2>Classificação</h2>
+      {top3.length === 3 && (
+        <div className="podium">
+          <div className="podium-spot podium-2">
+            <span className="medal">🥈</span>
+            <div className="pname">{top3[1].name}</div>
+            <div className="ppts">{top3[1].points}</div>
+          </div>
+          <div className="podium-spot podium-1">
+            <span className="medal">🥇</span>
+            <div className="pname">{top3[0].name}</div>
+            <div className="ppts">{top3[0].points}</div>
+          </div>
+          <div className="podium-spot podium-3">
+            <span className="medal">🥉</span>
+            <div className="pname">{top3[2].name}</div>
+            <div className="ppts">{top3[2].points}</div>
+          </div>
+        </div>
+      )}
+      <table className="rank-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Nome</th>
+            <th className="num">Pontos</th>
+            <th className="num">Cheios</th>
+            <th className="num">Parciais</th>
+            <th className="num">Jogos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ranking.map((r, i) => (
+            <tr key={r.name}>
+              <td><span className="pos-badge">{i + 1}</span></td>
+              <td>{r.name}</td>
+              <td className="num">{r.points}</td>
+              <td className="num">{r.exact}</td>
+              <td className="num">{r.partial}</td>
+              <td className="num">{r.played}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="hint">
+        Placar exato vale {POINTS_EXACT} pontos. Acertar só o vencedor ou o empate vale {POINTS_OUTCOME} pontos.
+      </p>
+    </div>
+  );
+}
+
+function PalpitesTab({ data, selectedDate, setSelectedDate }) {
+  if (data.matches.length === 0) {
+    return (
+      <div className="card">
+        <div className="empty">Nenhum jogo cadastrado ainda.</div>
+      </div>
+    );
+  }
+  const sortedDates = getSortedDates(data.matches);
+  const groups = groupMatchesByDate(data.matches);
+  const currentDate = sortedDates.includes(selectedDate) ? selectedDate : sortedDates[0];
+  const matchesOfDay = groups[currentDate] || [];
+
+  return (
+    <div className="card">
+      <h2>Palpites</h2>
+      <label className="field-label">Escolha a data</label>
+      <select
+        className="select-field"
+        value={currentDate}
+        onChange={(e) => setSelectedDate(e.target.value)}
+      >
+        {sortedDates.map((d) => (
+          <option key={d} value={d}>
+            {d} {groups[d].length > 1 ? `(${groups[d].length} jogos)` : ""}
+          </option>
+        ))}
+      </select>
+
+      {matchesOfDay.map((match) => {
+        const result = data.results[match.id];
+        const preds = data.predictions[match.id] || {};
+        return (
+          <div key={match.id} style={{ marginTop: 16 }}>
+            <div className="match-block">
+              <div className="match-top">
+                <span className="match-fase">{match.fase || "Jogo"}</span>
+                <span className={`match-status ${result ? "status-done" : "status-pending"}`}>
+                  {result ? "Finalizado" : "Aguardando"}
+                </span>
+              </div>
+              <div className="match-teams">
+                <span>{match.teamA}</span>
+                <span className="match-result">{result ? `${result.a} x ${result.b}` : "vs"}</span>
+                <span>{match.teamB}</span>
+              </div>
+            </div>
+
+            {data.participants.length === 0 ? (
+              <div className="empty">Nenhum participante cadastrado ainda.</div>
+            ) : (
+              data.participants.map((name) => {
+                const pred = preds[name];
+                const pts = calcPoints(pred, result);
+                return (
+                  <div className="pred-row" key={name}>
+                    <span>{name}</span>
+                    <span className="pred-score">{pred ? `${pred.a} x ${pred.b}` : "—"}</span>
+                    <span
+                      className={`pred-points ${
+                        pts === null ? "pts-none" : pts === 5 ? "pts-5" : pts === 3 ? "pts-3" : "pts-0"
+                      }`}
+                    >
+                      {pts === null ? "—" : `${pts} pts`}
+                    </span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function JogosTab({ data }) {
+  if (data.matches.length === 0) {
+    return (
+      <div className="card">
+        <div className="empty">Nenhum jogo cadastrado ainda.</div>
+      </div>
+    );
+  }
+  const groups = groupMatches(data.matches);
+  return (
+    <div>
+      {Object.entries(groups).map(([fase, ms]) => (
+        <div className="card" key={fase}>
+          <h2>{fase}</h2>
+          {ms.map((m) => {
+            const result = data.results[m.id];
+            return (
+              <div className="match-block" key={m.id}>
+                <div className="match-top">
+                  <span className="match-fase">{m.data || ""}</span>
+                  <span className={`match-status ${result ? "status-done" : "status-pending"}`}>
+                    {result ? "Finalizado" : "Aguardando"}
+                  </span>
+                </div>
+                <div className="match-teams">
+                  <span>{m.teamA}</span>
+                  <span className="match-result">{result ? `${result.a} x ${result.b}` : "vs"}</span>
+                  <span>{m.teamB}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AdminTab(props) {
+  const {
+    data,
+    persist,
+    isAdmin,
+    setIsAdmin,
+    pinInput,
+    setPinInput,
+    pinError,
+    setPinError,
+    adminTab,
+    setAdminTab,
+    saving,
+    error,
+  } = props;
+
+  if (!isAdmin) {
+    return (
+      <div className="card admin-lock">
+        <h2>Área do organizador</h2>
+        <p className="hint">Digite o código para cadastrar participantes, jogos, palpites e resultados.</p>
+        <input
+          className="text-field"
+          type="password"
+          inputMode="numeric"
+          maxLength={4}
+          value={pinInput}
+          onChange={(e) => setPinInput(e.target.value)}
+        />
+        <br />
+        <button
+          className="btn"
+          onClick={() => {
+            if (pinInput === ADMIN_PIN) {
+              setIsAdmin(true);
+              setPinError("");
+            } else {
+              setPinError("Código incorreto.");
+            }
+          }}
+        >
+          Entrar
+        </button>
+        {pinError && <div className="error-msg">{pinError}</div>}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="subnav">
+        <button className={adminTab === "participantes" ? "active" : ""} onClick={() => setAdminTab("participantes")}>
+          Participantes
+        </button>
+        <button className={adminTab === "jogos" ? "active" : ""} onClick={() => setAdminTab("jogos")}>
+          Jogos
+        </button>
+        <button className={adminTab === "palpites" ? "active" : ""} onClick={() => setAdminTab("palpites")}>
+          Palpites
+        </button>
+        <button className={adminTab === "resultados" ? "active" : ""} onClick={() => setAdminTab("resultados")}>
+          Resultados
+        </button>
+        <button className={adminTab === "importar" ? "active" : ""} onClick={() => setAdminTab("importar")}>
+          Importar
+        </button>
+      </div>
+
+      {adminTab === "participantes" && <ParticipantesPanel data={data} persist={persist} />}
+      {adminTab === "jogos" && <JogosPanel data={data} persist={persist} />}
+      {adminTab === "palpites" && <PalpitesPanel data={data} persist={persist} />}
+      {adminTab === "resultados" && <ResultadosPanel data={data} persist={persist} />}
+      {adminTab === "importar" && <ImportarPanel data={data} persist={persist} />}
+
+      {saving && <div className="saved-msg">Salvando...</div>}
+      {error && <div className="error-msg">{error}</div>}
+    </div>
+  );
+}
+
+function ParticipantesPanel({ data, persist }) {
+  const [text, setText] = useState(data.participants.join("\n"));
+  const [saved, setSaved] = useState(false);
+
+  function save() {
+    const names = text
+      .split("\n")
+      .map((n) => n.trim())
+      .filter((n) => n.length > 0);
+    const uniqueNames = [...new Set(names)];
+    persist({ ...data, participants: uniqueNames });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <div className="card">
+      <h2>Participantes do bolão</h2>
+      <p className="hint">Escreva um nome por linha. Isso será usado para registrar e mostrar os palpites de cada um.</p>
+      <textarea
+        className="text-field"
+        rows={10}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder={"Ana\nBruno\nCarla\n..."}
+      />
+      <br />
+      <br />
+      <button className="btn" onClick={save}>
+        Salvar lista
+      </button>
+      {saved && <div className="saved-msg">Lista salva ({text.split("\n").filter((n) => n.trim()).length} pessoas).</div>}
+    </div>
+  );
+}
+
+function JogosPanel({ data, persist }) {
+  const [teamA, setTeamA] = useState("");
+  const [teamB, setTeamB] = useState("");
+  const [fase, setFase] = useState("");
+  const [dataJogo, setDataJogo] = useState("");
+  const [bulkText, setBulkText] = useState("");
+  const [saved, setSaved] = useState("");
+
+  function addMatch() {
+    if (!teamA.trim() || !teamB.trim()) return;
+    const novo = { id: genId(), teamA: teamA.trim(), teamB: teamB.trim(), fase: fase.trim(), data: dataJogo.trim() };
+    persist({ ...data, matches: [...data.matches, novo] });
+    setTeamA("");
+    setTeamB("");
+    setSaved("Jogo adicionado.");
+    setTimeout(() => setSaved(""), 2000);
+  }
+
+  function addBulk() {
+    const lines = bulkText.split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
+    const novos = lines.map((line) => {
+      const parts = line.split(";").map((p) => p.trim());
+      return { id: genId(), teamA: parts[0] || "", teamB: parts[1] || "", fase: parts[2] || "", data: parts[3] || "" };
+    }).filter((m) => m.teamA && m.teamB);
+    if (novos.length === 0) return;
+    persist({ ...data, matches: [...data.matches, ...novos] });
+    setBulkText("");
+    setSaved(`${novos.length} jogo(s) adicionado(s).`);
+    setTimeout(() => setSaved(""), 2500);
+  }
+
+  function removeMatch(id) {
+    const { [id]: _, ...restPred } = data.predictions;
+    const { [id]: __, ...restRes } = data.results;
+    persist({
+      ...data,
+      matches: data.matches.filter((m) => m.id !== id),
+      predictions: restPred,
+      results: restRes,
+    });
+  }
+
+  return (
+    <div>
+      <div className="card">
+        <h2>Adicionar jogo</h2>
+        <label className="field-label">Time A</label>
+        <input className="text-field" value={teamA} onChange={(e) => setTeamA(e.target.value)} placeholder="Brasil" />
+        <label className="field-label">Time B</label>
+        <input className="text-field" value={teamB} onChange={(e) => setTeamB(e.target.value)} placeholder="Argentina" />
+        <label className="field-label">Fase / grupo (opcional)</label>
+        <input className="text-field" value={fase} onChange={(e) => setFase(e.target.value)} placeholder="Grupo A" />
+        <label className="field-label">Data / horário (opcional)</label>
+        <input className="text-field" value={dataJogo} onChange={(e) => setDataJogo(e.target.value)} placeholder="15/06 - 16h" />
+        <br />
+        <br />
+        <button className="btn" onClick={addMatch}>
+          Adicionar jogo
+        </button>
+        {saved && <div className="saved-msg">{saved}</div>}
+      </div>
+
+      <div className="card">
+        <h3>Adicionar vários jogos de uma vez</h3>
+        <p className="hint">
+          Um jogo por linha, no formato: Time A ; Time B ; Fase ; Data (os dois últimos são opcionais).
+          <br />
+          Exemplo: Brasil;Argentina;Grupo A;15/06 - 16h
+        </p>
+        <textarea
+          className="text-field"
+          rows={5}
+          value={bulkText}
+          onChange={(e) => setBulkText(e.target.value)}
+          placeholder={"Brasil;Argentina;Grupo A;15/06\nFrança;Alemanha;Grupo B;16/06"}
+        />
+        <br />
+        <br />
+        <button className="btn secondary" onClick={addBulk}>
+          Adicionar lista
+        </button>
+      </div>
+
+      <div className="card">
+        <h2>Jogos cadastrados ({data.matches.length})</h2>
+        {data.matches.length === 0 && <div className="empty">Nenhum jogo ainda.</div>}
+        {data.matches.map((m) => (
+          <div className="list-item" key={m.id}>
+            <span>
+              <MatchLabel m={m} />
+              {m.data ? <span className="tag">{m.data}</span> : null}
+            </span>
+            <button className="btn danger" onClick={() => removeMatch(m.id)}>
+              Remover
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PalpitesPanel({ data, persist }) {
+  const [selectedMatchId, setSelectedMatchId] = useState(data.matches[0]?.id || "");
+  const [draft, setDraft] = useState({});
+  const [saved, setSaved] = useState(false);
+
+  const match = data.matches.find((m) => m.id === selectedMatchId);
+
+  useEffect(() => {
+    if (!match) return;
+    const current = data.predictions[match.id] || {};
+    const next = {};
+    data.participants.forEach((name) => {
+      next[name] = current[name] ? { a: String(current[name].a), b: String(current[name].b) } : { a: "", b: "" };
+    });
+    setDraft(next);
+    setSaved(false);
+    // eslint-disable-next-line
+  }, [selectedMatchId, data.participants.length]);
+
+  if (data.matches.length === 0) {
+    return (
+      <div className="card">
+        <div className="empty">Cadastre jogos primeiro, na aba "Jogos".</div>
+      </div>
+    );
+  }
+  if (data.participants.length === 0) {
+    return (
+      <div className="card">
+        <div className="empty">Cadastre os participantes primeiro, na aba "Participantes".</div>
+      </div>
+    );
+  }
+
+  function updateScore(name, side, value) {
+    if (value !== "" && !/^\d{0,2}$/.test(value)) return;
+    setDraft((d) => ({ ...d, [name]: { ...d[name], [side]: value } }));
+  }
+
+  function save() {
+    const matchPreds = { ...(data.predictions[match.id] || {}) };
+    data.participants.forEach((name) => {
+      const a = draft[name]?.a;
+      const b = draft[name]?.b;
+      if (a !== "" && b !== "" && a !== undefined && b !== undefined) {
+        matchPreds[name] = { a: Number(a), b: Number(b) };
+      } else {
+        delete matchPreds[name];
+      }
+    });
+    persist({ ...data, predictions: { ...data.predictions, [match.id]: matchPreds } });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  const groups = groupMatches(data.matches);
+
+  return (
+    <div className="card">
+      <h2>Cadastrar palpites</h2>
+      <label className="field-label">Jogo</label>
+      <select className="select-field" value={selectedMatchId} onChange={(e) => setSelectedMatchId(e.target.value)}>
+        {Object.entries(groups).map(([fase, ms]) => (
+          <optgroup key={fase} label={fase}>
+            {ms.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.teamA} x {m.teamB}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+
+      <div style={{ marginTop: 14 }}>
+        {data.participants.map((name) => (
+          <div className="input-row" key={name}>
+            <span style={{ flex: 1, fontSize: 14 }}>{name}</span>
+            <input
+              className="score-input"
+              inputMode="numeric"
+              value={draft[name]?.a ?? ""}
+              onChange={(e) => updateScore(name, "a", e.target.value)}
+            />
+            <span className="score-vs">x</span>
+            <input
+              className="score-input"
+              inputMode="numeric"
+              value={draft[name]?.b ?? ""}
+              onChange={(e) => updateScore(name, "b", e.target.value)}
+            />
+          </div>
+        ))}
+      </div>
+      <br />
+      <button className="btn" onClick={save}>
+        Salvar palpites deste jogo
+      </button>
+      {saved && <div className="saved-msg">Palpites salvos!</div>}
+    </div>
+  );
+}
+
+function ResultadosPanel({ data, persist }) {
+  const [selectedMatchId, setSelectedMatchId] = useState(data.matches[0]?.id || "");
+  const [a, setA] = useState("");
+  const [b, setB] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  const match = data.matches.find((m) => m.id === selectedMatchId);
+
+  useEffect(() => {
+    if (!match) return;
+    const r = data.results[match.id];
+    setA(r ? String(r.a) : "");
+    setB(r ? String(r.b) : "");
+    setSaved(false);
+    // eslint-disable-next-line
+  }, [selectedMatchId]);
+
+  if (data.matches.length === 0) {
+    return (
+      <div className="card">
+        <div className="empty">Cadastre jogos primeiro, na aba "Jogos".</div>
+      </div>
+    );
+  }
+
+  function save() {
+    if (a === "" || b === "") return;
+    persist({ ...data, results: { ...data.results, [match.id]: { a: Number(a), b: Number(b) } } });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  function clearResult() {
+    const { [match.id]: _, ...rest } = data.results;
+    persist({ ...data, results: rest });
+    setA("");
+    setB("");
+  }
+
+  const groups = groupMatches(data.matches);
+
+  return (
+    <div className="card">
+      <h2>Cadastrar resultado</h2>
+      <label className="field-label">Jogo</label>
+      <select className="select-field" value={selectedMatchId} onChange={(e) => setSelectedMatchId(e.target.value)}>
+        {Object.entries(groups).map(([fase, ms]) => (
+          <optgroup key={fase} label={fase}>
+            {ms.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.teamA} x {m.teamB}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+
+      <div className="input-row" style={{ marginTop: 14, justifyContent: "center" }}>
+        <span style={{ fontWeight: 600 }}>{match?.teamA}</span>
+        <input
+          className="score-input"
+          inputMode="numeric"
+          value={a}
+          onChange={(e) => /^\d{0,2}$/.test(e.target.value) && setA(e.target.value)}
+        />
+        <span className="score-vs">x</span>
+        <input
+          className="score-input"
+          inputMode="numeric"
+          value={b}
+          onChange={(e) => /^\d{0,2}$/.test(e.target.value) && setB(e.target.value)}
+        />
+        <span style={{ fontWeight: 600 }}>{match?.teamB}</span>
+      </div>
+      <br />
+      <button className="btn" onClick={save} disabled={a === "" || b === ""}>
+        Salvar resultado
+      </button>{" "}
+      <button className="btn secondary" onClick={clearResult}>
+        Limpar resultado
+      </button>
+      {saved && <div className="saved-msg">Resultado salvo! Ranking atualizado.</div>}
+    </div>
+  );
+}
+
+function ImportarPanel({ data, persist }) {
+  const [done, setDone] = useState(false);
+
+  const newPredictionsCount = useMemo(() => {
+    let count = 0;
+    Object.entries(DEFAULT_DATA.predictions).forEach(([mid, preds]) => {
+      Object.entries(preds).forEach(([name, val]) => {
+        const current = data.predictions[mid]?.[name];
+        if (!current || current.a !== val.a || current.b !== val.b) count += 1;
+      });
+    });
+    return count;
+  }, [data]);
+
+  const newResultsCount = useMemo(() => {
+    let count = 0;
+    Object.entries(DEFAULT_DATA.results).forEach(([mid, val]) => {
+      const current = data.results[mid];
+      if (!current || current.a !== val.a || current.b !== val.b) count += 1;
+    });
+    return count;
+  }, [data]);
+
+  function importarAtualizacao() {
+    const mergedPredictions = { ...data.predictions };
+    Object.entries(DEFAULT_DATA.predictions).forEach(([mid, preds]) => {
+      mergedPredictions[mid] = { ...(mergedPredictions[mid] || {}), ...preds };
+    });
+    const mergedResults = { ...data.results, ...DEFAULT_DATA.results };
+    persist({ ...data, predictions: mergedPredictions, results: mergedResults });
+    setDone(true);
+    setTimeout(() => setDone(false), 3000);
+  }
+
+  return (
+    <div className="card">
+      <h2>Importar atualização da planilha</h2>
+      <p className="hint">
+        Quando o Claude atualizar os dados embutidos no app a partir de uma nova versão da sua planilha,
+        use este botão para aplicar essas mudanças aos dados que já estão salvos aqui (sem apagar jogos,
+        participantes ou edições feitas direto pelo app).
+      </p>
+      <p className="hint">
+        Atualização disponível: <strong>{newPredictionsCount}</strong> palpite(s) e{" "}
+        <strong>{newResultsCount}</strong> resultado(s) novos/diferentes.
+      </p>
+      {newPredictionsCount === 0 && newResultsCount === 0 ? (
+        <p className="hint">Os dados já estão sincronizados com a última versão importada.</p>
+      ) : (
+        <button className="btn" onClick={importarAtualizacao}>
+          Importar atualização
+        </button>
+      )}
+      {done && <div className="saved-msg">Atualização importada! Ranking recalculado.</div>}
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
