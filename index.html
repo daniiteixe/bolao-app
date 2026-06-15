@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: datas-fix-2 -->
+<!-- build: datas-fix-3 -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -246,7 +246,14 @@ function App() {
       const json = await res.json();
       const record = json && json.record;
       if (record && Array.isArray(record.matches)) {
-        setData({ ...DEFAULT_DATA, ...record });
+        const matchesMap = {};
+        record.matches.forEach((m) => {
+          matchesMap[m.id] = m;
+        });
+        DEFAULT_DATA.matches.forEach((m) => {
+          matchesMap[m.id] = m;
+        });
+        setData({ ...DEFAULT_DATA, ...record, matches: Object.values(matchesMap) });
       } else {
         setData((prev) => prev || DEFAULT_DATA);
       }
