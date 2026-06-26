@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: datas-fix-3 -->
+<!-- build: datas-fix-2 -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -173,6 +173,49 @@ const CSS = `
 .error-msg { font-size: 12px; color: #C0492B; font-weight: 600; margin-top: 6px; }
 .loading { text-align: center; padding: 60px 16px; color: #9A917F; }
 .hint { font-size: 12px; color: #9A917F; margin-top: 6px; line-height: 1.5; }
+
+/* ── Chaveamento ── */
+.bracket-wrap { overflow-x: auto; padding-bottom: 16px; }
+.bracket-scroll { display: flex; gap: 0; min-width: 700px; align-items: stretch; }
+.bracket-round { display: flex; flex-direction: column; flex: 1; position: relative; }
+.bracket-round-label { font-family: 'Anton', sans-serif; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #9A917F; text-align: center; padding: 10px 4px 8px; border-bottom: 1px solid #E6E0D2; margin: 0 4px 0; }
+.bracket-round-label.final-label { color: #F2C14E; }
+.bracket-slots { display: flex; flex-direction: column; justify-content: space-around; flex: 1; padding: 8px 4px; gap: 0; }
+.bracket-match { background: #fff; border: 1px solid #E6E0D2; border-radius: 10px; margin: 6px 4px; overflow: hidden; position: relative; transition: box-shadow .15s; }
+.bracket-match.has-result { border-color: #1B5E3A; }
+.bracket-match.is-final { border-color: #F2C14E; border-width: 2px; box-shadow: 0 0 0 3px rgba(242,193,78,0.18); }
+.bracket-match:hover { box-shadow: 0 2px 10px rgba(23,54,32,0.12); }
+.bracket-team { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; font-size: 12px; font-weight: 600; min-height: 34px; gap: 6px; }
+.bracket-team + .bracket-team { border-top: 1px solid #F1EDE2; }
+.bracket-team-name { flex: 1; color: #20241F; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bracket-team-name.tbd { color: #C9C2B2; font-weight: 400; font-style: italic; }
+.bracket-team-score { font-family: 'Anton', sans-serif; font-size: 14px; min-width: 20px; text-align: center; color: #9A917F; }
+.bracket-team-score.winner { color: #1B5E3A; }
+.bracket-team.winner-row { background: #F0F7F2; }
+.bracket-match-label { font-size: 9px; text-transform: uppercase; letter-spacing: .5px; color: #C9C2B2; font-weight: 700; padding: 3px 10px 0; }
+.bracket-connector { position: absolute; right: -8px; top: 50%; transform: translateY(-50%); width: 8px; height: 1px; background: #D8D2C2; z-index: 1; }
+.bracket-empty { color: #C9C2B2; font-size: 12px; text-align: center; padding: 8px 4px; font-style: italic; }
+.champion-banner { background: linear-gradient(135deg, #173620, #1B5E3A); border-radius: 14px; padding: 22px 16px; text-align: center; margin-bottom: 16px; }
+.champion-banner .trophy { font-size: 40px; display: block; margin-bottom: 6px; }
+.champion-banner h3 { font-family: 'Anton', sans-serif; font-size: 22px; color: #F2C14E; margin: 0; letter-spacing: 1px; text-transform: uppercase; }
+.champion-banner p { color: #D9E8DD; font-size: 13px; margin: 4px 0 0; }
+.bracket-round-final { flex: 1.1; }
+.phase-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.phase-tab { background: #F1EDE2; border: none; padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #5B5448; cursor: pointer; font-family: 'Work Sans', sans-serif; }
+.phase-tab.active { background: #173620; color: #F2C14E; }
+.bracket-mobile-match { background: #fff; border: 1px solid #E6E0D2; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+.bracket-mobile-match.has-result { border-color: #1B5E3A; }
+.bracket-mobile-match.is-final { border-color: #F2C14E; border-width: 2px; }
+.bracket-mobile-phase { font-family: 'Anton', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #9A917F; margin-bottom: 6px; }
+.bracket-mobile-teams { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.bracket-mobile-team { flex: 1; font-size: 13px; font-weight: 600; color: #20241F; }
+.bracket-mobile-team.tbd { color: #C9C2B2; font-weight: 400; font-style: italic; font-size: 12px; }
+.bracket-mobile-team.right { text-align: right; }
+.bracket-mobile-score { font-family: 'Anton', sans-serif; font-size: 18px; background: #173620; color: #F2C14E; padding: 3px 12px; border-radius: 6px; min-width: 64px; text-align: center; }
+.bracket-mobile-score.pending { background: #F1EDE2; color: #9A917F; font-size: 14px; }
+.bracket-view-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
+.view-btn { background: #F1EDE2; border: none; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #5B5448; cursor: pointer; font-family: 'Work Sans', sans-serif; }
+.view-btn.active { background: #1B5E3A; color: #fff; }
 `;
 
 function MatchLabel({ m }) {
@@ -246,14 +289,7 @@ function App() {
       const json = await res.json();
       const record = json && json.record;
       if (record && Array.isArray(record.matches)) {
-        const matchesMap = {};
-        record.matches.forEach((m) => {
-          matchesMap[m.id] = m;
-        });
-        DEFAULT_DATA.matches.forEach((m) => {
-          matchesMap[m.id] = m;
-        });
-        setData({ ...DEFAULT_DATA, ...record, matches: Object.values(matchesMap) });
+        setData({ ...DEFAULT_DATA, ...record });
       } else {
         setData((prev) => prev || DEFAULT_DATA);
       }
@@ -368,6 +404,9 @@ function App() {
         <button className={activeTab === "jogos" ? "active" : ""} onClick={() => setActiveTab("jogos")}>
           Jogos
         </button>
+        <button className={activeTab === "chaveamento" ? "active" : ""} onClick={() => setActiveTab("chaveamento")}>
+          🏆 Mata-mata
+        </button>
         <button className={activeTab === "admin" ? "active" : ""} onClick={() => setActiveTab("admin")}>
           🔒 Organizador
         </button>
@@ -383,6 +422,7 @@ function App() {
           />
         )}
         {activeTab === "jogos" && <JogosTab data={data} />}
+        {activeTab === "chaveamento" && <ChaveamentoTab data={data} ranking={ranking} />}
         {activeTab === "admin" && (
           <AdminTab
             data={data}
@@ -1051,6 +1091,321 @@ function ImportarPanel({ data, persist }) {
   );
 }
 
+
+
+// ── Configuração do mata-mata ──────────────────────────────────────────────
+const KNOCKOUT_PHASES = [
+  { key: "Dezesseis avos de Final", label: "16 avos",  short: "R32", slots: 16 },
+  { key: "Oitavas de Final",        label: "Oitavas",  short: "R16", slots: 8  },
+  { key: "Quartas de Final",        label: "Quartas",  short: "QF",  slots: 4  },
+  { key: "Semifinal",               label: "Semifinal",short: "SF",  slots: 2  },
+  { key: "Disputa 3º Lugar",        label: "3º Lugar", short: "3P",  slots: 1  },
+  { key: "Final",                   label: "Final",    short: "FIN", slots: 1  },
+];
+
+const PHASE_ORDER = KNOCKOUT_PHASES.map((p) => p.key);
+
+function getKnockoutMatches(data) {
+  const phaseKeys = new Set(PHASE_ORDER);
+  return data.matches.filter((m) => phaseKeys.has(m.fase));
+}
+
+function getMatchWinner(match, results) {
+  const r = results[match.id];
+  if (!r) return null;
+  if (r.a > r.b) return match.teamA;
+  if (r.b > r.a) return match.teamB;
+  return null; // empate — improvável no mata-mata mas tratamos
+}
+
+// ── BracketMatch – card de um confronto ──────────────────────────────────
+function BracketMatchCard({ match, result, showLabel, isFinal }) {
+  const winnerTeam = result
+    ? result.a > result.b ? match.teamA : result.b > result.a ? match.teamB : null
+    : null;
+
+  const teamAWon = winnerTeam === match.teamA;
+  const teamBWon = winnerTeam === match.teamB;
+
+  const teamAName = match.teamA || null;
+  const teamBName = match.teamB || null;
+
+  return (
+    <div className={`bracket-match${result ? " has-result" : ""}${isFinal ? " is-final" : ""}`}>
+      {showLabel && (
+        <div className="bracket-match-label">{match.data || ""}</div>
+      )}
+      <div className={`bracket-team${teamAWon ? " winner-row" : ""}`}>
+        <span className={`bracket-team-name${!teamAName ? " tbd" : ""}`}>
+          {teamAName || "A definir"}
+        </span>
+        {result && (
+          <span className={`bracket-team-score${teamAWon ? " winner" : ""}`}>{result.a}</span>
+        )}
+      </div>
+      <div className={`bracket-team${teamBWon ? " winner-row" : ""}`}>
+        <span className={`bracket-team-name${!teamBName ? " tbd" : ""}`}>
+          {teamBName || "A definir"}
+        </span>
+        {result && (
+          <span className={`bracket-team-score${teamBWon ? " winner" : ""}`}>{result.b}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Visão Desktop: bracket horizontal ────────────────────────────────────
+function BracketDesktop({ data, matchesByPhase }) {
+  // Fases principais (excluindo 3º lugar que fica separado)
+  const mainPhases = KNOCKOUT_PHASES.filter((p) => p.key !== "Disputa 3º Lugar");
+  const thirdPlace = KNOCKOUT_PHASES.find((p) => p.key === "Disputa 3º Lugar");
+  const thirdMatches = matchesByPhase["Disputa 3º Lugar"] || [];
+
+  // Campeão
+  const finalMatches = matchesByPhase["Final"] || [];
+  const champion = finalMatches.length > 0
+    ? getMatchWinner(finalMatches[0], data.results)
+    : null;
+
+  return (
+    <div>
+      {champion && (
+        <div className="champion-banner">
+          <span className="trophy">🏆</span>
+          <h3>{champion}</h3>
+          <p>Campeão da Copa do Mundo 2026</p>
+        </div>
+      )}
+
+      <div className="bracket-wrap">
+        <div className="bracket-scroll">
+          {mainPhases.map((phase, phaseIdx) => {
+            const matches = matchesByPhase[phase.key] || [];
+            const isEmpty = matches.length === 0;
+            const isFinalPhase = phase.key === "Final";
+
+            return (
+              <div
+                key={phase.key}
+                className={`bracket-round${isFinalPhase ? " bracket-round-final" : ""}`}
+              >
+                <div className={`bracket-round-label${isFinalPhase ? " final-label" : ""}`}>
+                  {phase.label}
+                </div>
+                <div className="bracket-slots">
+                  {isEmpty ? (
+                    <div className="bracket-empty">Aguardando jogos</div>
+                  ) : (
+                    matches.map((m) => (
+                      <div key={m.id} style={{ position: "relative" }}>
+                        <BracketMatchCard
+                          match={m}
+                          result={data.results[m.id]}
+                          showLabel={true}
+                          isFinal={isFinalPhase}
+                        />
+                        {phaseIdx < mainPhases.length - 1 && (
+                          <div className="bracket-connector" />
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 3º Lugar separado */}
+      {(thirdMatches.length > 0) && (
+        <div className="card" style={{ marginTop: 0 }}>
+          <h2 style={{ fontSize: 14, marginBottom: 10 }}>🥉 Disputa pelo 3º Lugar</h2>
+          {thirdMatches.map((m) => (
+            <BracketMatchCard
+              key={m.id}
+              match={m}
+              result={data.results[m.id]}
+              showLabel={false}
+              isFinal={false}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Visão Mobile: lista por fase ──────────────────────────────────────────
+function BracketMobile({ data, matchesByPhase, activePhase, setActivePhase }) {
+  const allPhases = KNOCKOUT_PHASES.filter((p) => (matchesByPhase[p.key] || []).length > 0);
+  const currentMatches = matchesByPhase[activePhase] || [];
+  const isFinal = activePhase === "Final";
+
+  if (allPhases.length === 0) {
+    return (
+      <div className="card">
+        <div className="empty">
+          Nenhum jogo do mata-mata cadastrado ainda.<br />
+          O organizador pode adicionar na aba Organizador → Jogos.
+        </div>
+      </div>
+    );
+  }
+
+  const finalMatches = matchesByPhase["Final"] || [];
+  const champion = finalMatches.length > 0
+    ? getMatchWinner(finalMatches[0], data.results)
+    : null;
+
+  return (
+    <div>
+      {champion && (
+        <div className="champion-banner">
+          <span className="trophy">🏆</span>
+          <h3>{champion}</h3>
+          <p>Campeão da Copa do Mundo 2026</p>
+        </div>
+      )}
+
+      <div className="phase-tabs">
+        {KNOCKOUT_PHASES.map((phase) => {
+          const hasMatches = (matchesByPhase[phase.key] || []).length > 0;
+          if (!hasMatches) return null;
+          return (
+            <button
+              key={phase.key}
+              className={`phase-tab${activePhase === phase.key ? " active" : ""}`}
+              onClick={() => setActivePhase(phase.key)}
+            >
+              {phase.short}
+            </button>
+          );
+        })}
+      </div>
+
+      {currentMatches.length === 0 ? (
+        <div className="card">
+          <div className="empty">Nenhum jogo nesta fase ainda.</div>
+        </div>
+      ) : (
+        currentMatches.map((m) => {
+          const result = data.results[m.id];
+          const winnerTeam = result
+            ? result.a > result.b ? m.teamA : result.b > result.a ? m.teamB : null
+            : null;
+
+          return (
+            <div
+              key={m.id}
+              className={`bracket-mobile-match${result ? " has-result" : ""}${isFinal ? " is-final" : ""}`}
+            >
+              <div className="bracket-mobile-phase">
+                {activePhase}{m.data ? ` · ${m.data}` : ""}
+              </div>
+              <div className="bracket-mobile-teams">
+                <span className={`bracket-mobile-team${!m.teamA ? " tbd" : ""}${winnerTeam === m.teamA ? "" : ""}`}>
+                  {m.teamA || "A definir"}
+                </span>
+                <span className={`bracket-mobile-score${!result ? " pending" : ""}`}>
+                  {result ? `${result.a} × ${result.b}` : "vs"}
+                </span>
+                <span className={`bracket-mobile-team right${!m.teamB ? " tbd" : ""}`}>
+                  {m.teamB || "A definir"}
+                </span>
+              </div>
+              {winnerTeam && (
+                <div style={{ fontSize: 11, color: "#1B5E3A", fontWeight: 700, marginTop: 6, textAlign: "center" }}>
+                  ✓ {winnerTeam} avança
+                </div>
+              )}
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
+// ── ChaveamentoTab principal ──────────────────────────────────────────────
+function ChaveamentoTab({ data, ranking }) {
+  const [view, setView] = useState("lista"); // "bracket" | "lista"
+  const [activePhase, setActivePhase] = useState("Oitavas de Final");
+
+  const knockoutMatches = getKnockoutMatches(data);
+
+  // Agrupa por fase
+  const matchesByPhase = {};
+  KNOCKOUT_PHASES.forEach((p) => { matchesByPhase[p.key] = []; });
+  knockoutMatches.forEach((m) => {
+    if (matchesByPhase[m.fase]) matchesByPhase[m.fase].push(m);
+  });
+
+  // Define fase inicial com jogos
+  React.useEffect(() => {
+    const firstWithMatches = KNOCKOUT_PHASES.find(
+      (p) => (matchesByPhase[p.key] || []).length > 0
+    );
+    if (firstWithMatches) setActivePhase(firstWithMatches.key);
+  }, [knockoutMatches.length]);
+
+  const totalKnockout = knockoutMatches.length;
+  const finishedKnockout = knockoutMatches.filter((m) => data.results[m.id]).length;
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+          <div>
+            <h2 style={{ margin: 0 }}>Mata-mata</h2>
+            <p className="hint" style={{ marginTop: 4 }}>
+              {totalKnockout === 0
+                ? "Nenhum jogo cadastrado ainda."
+                : `${finishedKnockout} de ${totalKnockout} jogo(s) finalizado(s)`}
+            </p>
+          </div>
+          {totalKnockout > 0 && (
+            <div className="bracket-view-toggle">
+              <button
+                className={`view-btn${view === "lista" ? " active" : ""}`}
+                onClick={() => setView("lista")}
+              >
+                ☰ Lista
+              </button>
+              <button
+                className={`view-btn${view === "bracket" ? " active" : ""}`}
+                onClick={() => setView("bracket")}
+              >
+                ⊞ Bracket
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {totalKnockout === 0 ? (
+        <div className="card">
+          <div className="empty">
+            Os confrontos do mata-mata ainda não foram definidos.<br /><br />
+            Quando os times se classificarem dos grupos, o organizador pode adicionar os jogos na aba{" "}
+            <strong>🔒 Organizador → Jogos</strong>, usando as fases:<br /><br />
+            <strong>Dezesseis avos de Final · Oitavas de Final · Quartas de Final · Semifinal · Disputa 3º Lugar · Final</strong>
+          </div>
+        </div>
+      ) : view === "bracket" ? (
+        <BracketDesktop data={data} matchesByPhase={matchesByPhase} />
+      ) : (
+        <BracketMobile
+          data={data}
+          matchesByPhase={matchesByPhase}
+          activePhase={activePhase}
+          setActivePhase={setActivePhase}
+        />
+      )}
+    </div>
+  );
+}
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
