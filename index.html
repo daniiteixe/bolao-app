@@ -947,22 +947,36 @@ function PalpitesPanel({ data, persist }) {
   );
 }
 
+const KNOCKOUT_PHASE_KEYS = new Set([
+  "Dezesseis avos de Final", "Oitavas de Final", "Quartas de Final",
+  "Semifinal", "Disputa 3º Lugar", "Final"
+]);
+
 function ResultadosPanel({ data, persist }) {
   const [selectedMatchId, setSelectedMatchId] = useState(data.matches[0]?.id || "");
   const [a, setA] = useState("");
   const [b, setB] = useState("");
+  const [winner, setWinner] = useState(""); // quem avançou nos pênaltis
   const [saved, setSaved] = useState(false);
 
   const match = data.matches.find((m) => m.id === selectedMatchId);
+  const isKnockout = match ? KNOCKOUT_PHASE_KEYS.has(match.fase) : false;
+  const isDraw = a !== "" && b !== "" && Number(a) === Number(b);
 
   useEffect(() => {
     if (!match) return;
     const r = data.results[match.id];
     setA(r ? String(r.a) : "");
     setB(r ? String(r.b) : "");
+    setWinner(r?.winner || "");
     setSaved(false);
     // eslint-disable-next-line
   }, [selectedMatchId]);
+
+  // Limpa winner se o empate for desfeito
+  useEffect(() => {
+    if (!isDraw) setWinner("");
+  }, [isDraw]);
 
   if (data.matches.length === 0) {
     return (
@@ -974,7 +988,10 @@ function ResultadosPanel({ data, persist }) {
 
   function save() {
     if (a === "" || b === "") return;
-    persist({ ...data, results: { ...data.results, [match.id]: { a: Number(a), b: Number(b) } } });
+    if (isKnockout && isDraw && !winner) return; // empate no mata-mata precisa de quem avançou
+    const resultObj = { a: Number(a), b: Number(b) };
+    if (winner) resultObj.winner = winner;
+    persist({ ...data, results: { ...data.results, [match.id]: resultObj } });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -982,8 +999,7 @@ function ResultadosPanel({ data, persist }) {
   function clearResult() {
     const { [match.id]: _, ...rest } = data.results;
     persist({ ...data, results: rest });
-    setA("");
-    setB("");
+    setA(""); setB(""); setWinner("");
   }
 
   const groups = groupMatches(data.matches);
@@ -1021,8 +1037,43 @@ function ResultadosPanel({ data, persist }) {
         />
         <span style={{ fontWeight: 600 }}>{match?.teamB}</span>
       </div>
+
+      {/* Campo de pênaltis — aparece só em mata-mata com empate */}
+      {isKnockout && isDraw && (
+        <div style={{ marginTop: 16, background: "#F0F7F2", borderRadius: 10, padding: "12px 14px" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#1B5E3A", marginBottom: 8 }}>
+            ⚽ Empate — quem avançou nos pênaltis?
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className={`btn${winner === match?.teamA ? "" : " secondary"}`}
+              style={{ flex: 1, fontSize: 13 }}
+              onClick={() => setWinner(match?.teamA)}
+            >
+              {match?.teamA}
+            </button>
+            <button
+              className={`btn${winner === match?.teamB ? "" : " secondary"}`}
+              style={{ flex: 1, fontSize: 13 }}
+              onClick={() => setWinner(match?.teamB)}
+            >
+              {match?.teamB}
+            </button>
+          </div>
+          {winner && (
+            <div style={{ fontSize: 12, color: "#1B5E3A", fontWeight: 700, marginTop: 8, textAlign: "center" }}>
+              ✓ {winner} avança
+            </div>
+          )}
+        </div>
+      )}
+
       <br />
-      <button className="btn" onClick={save} disabled={a === "" || b === ""}>
+      <button
+        className="btn"
+        onClick={save}
+        disabled={a === "" || b === "" || (isKnockout && isDraw && !winner)}
+      >
         Salvar resultado
       </button>{" "}
       <button className="btn secondary" onClick={clearResult}>
@@ -1113,19 +1164,23 @@ function getKnockoutMatches(data) {
 function getMatchWinner(match, results) {
   const r = results[match.id];
   if (!r) return null;
+  if (r.winner) return r.winner; // pênaltis — quem avançou definido manualmente
   if (r.a > r.b) return match.teamA;
   if (r.b > r.a) return match.teamB;
-  return null; // empate — improvável no mata-mata mas tratamos
+  return null;
 }
 
 // ── BracketMatch – card de um confronto ──────────────────────────────────
 function BracketMatchCard({ match, result, showLabel, isFinal }) {
   const winnerTeam = result
-    ? result.a > result.b ? match.teamA : result.b > result.a ? match.teamB : null
+    ? result.winner
+      ? result.winner
+      : result.a > result.b ? match.teamA : result.b > result.a ? match.teamB : null
     : null;
 
   const teamAWon = winnerTeam === match.teamA;
   const teamBWon = winnerTeam === match.teamB;
+  const isPenalty = result && result.winner && result.a === result.b;
 
   const teamAName = match.teamA || null;
   const teamBName = match.teamB || null;
@@ -1133,7 +1188,10 @@ function BracketMatchCard({ match, result, showLabel, isFinal }) {
   return (
     <div className={`bracket-match${result ? " has-result" : ""}${isFinal ? " is-final" : ""}`}>
       {showLabel && (
-        <div className="bracket-match-label">{match.data || ""}</div>
+        <div className="bracket-match-label">
+          {match.data || ""}
+          {isPenalty && <span style={{ marginLeft: 4, color: "#F2C14E" }}>· PEN</span>}
+        </div>
       )}
       <div className={`bracket-team${teamAWon ? " winner-row" : ""}`}>
         <span className={`bracket-team-name${!teamAName ? " tbd" : ""}`}>
@@ -1293,8 +1351,11 @@ function BracketMobile({ data, matchesByPhase, activePhase, setActivePhase }) {
         currentMatches.map((m) => {
           const result = data.results[m.id];
           const winnerTeam = result
-            ? result.a > result.b ? m.teamA : result.b > result.a ? m.teamB : null
+            ? result.winner
+              ? result.winner
+              : result.a > result.b ? m.teamA : result.b > result.a ? m.teamB : null
             : null;
+          const isPenalty = result && result.winner && result.a === result.b;
 
           return (
             <div
@@ -1317,7 +1378,7 @@ function BracketMobile({ data, matchesByPhase, activePhase, setActivePhase }) {
               </div>
               {winnerTeam && (
                 <div style={{ fontSize: 11, color: "#1B5E3A", fontWeight: 700, marginTop: 6, textAlign: "center" }}>
-                  ✓ {winnerTeam} avança
+                  ✓ {winnerTeam} avança{isPenalty ? " (pênaltis)" : ""}
                 </div>
               )}
             </div>
